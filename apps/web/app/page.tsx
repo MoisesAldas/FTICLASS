@@ -36,24 +36,21 @@ export default function Page() {
   }
 
   return (
-    <div className="bg-black text-[#e4e2e4] min-h-screen">
+    <div className="bg-black text-[#e4e2e4] min-h-screen overflow-x-hidden">
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-100 flex justify-between items-center px-10 py-6 max-w-none">
+      <nav className="fixed top-0 w-full z-100 flex justify-between items-center px-6 md:px-10 py-6 max-w-none">
         <div className="flex items-center gap-12">
-          <span className="text-2xl font-black italic tracking-tighter text-white uppercase">FITCLASS</span>
+          <span className="text-xl md:text-2xl font-black italic tracking-tighter text-white uppercase">FITCLASS</span>
           <div className="hidden lg:flex gap-8 items-center bg-black/20 backdrop-blur-xl px-6 py-2 rounded-full border border-white/5">
-            <a className="text-white font-bold" href="#historias">Historias</a>
-            <a className="text-zinc-400 font-medium hover:text-white transition-colors" href="#sistema">Sistema</a>
-            <a className="text-zinc-400 font-medium hover:text-white transition-colors" href="#comunidad">Comunidad</a>
-            <a className="text-zinc-400 font-medium hover:text-white transition-colors" href="#precios">Precios</a>
+            <a href="#historias" className="text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors">Historias</a>
+            <a href="#sistema" className="text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors">Sistema</a>
+            <a href="#comunidad" className="text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors">Comunidad</a>
+            <a href="#precios" className="text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors">Precios</a>
           </div>
         </div>
-        <div className="flex items-center gap-6">
-          <button className="text-white font-bold hidden md:block">Login</button>
-          <button className="bg-white text-black px-8 py-3 rounded-full font-black text-sm hover:bg-[#c2c1ff] transition-colors">
-            ACCESO ELITE
-          </button>
-        </div>
+        <button className="bg-white text-black text-[10px] md:text-xs font-black uppercase tracking-[0.2em] px-4 md:px-8 py-3 md:py-4 rounded-full hover:scale-105 transition-transform shrink-0">
+          ACCESO ELITE
+        </button>
       </nav>
 
       <main>
@@ -81,13 +78,13 @@ export default function Page() {
               </span>
               <span className="text-xs font-black uppercase tracking-widest leading-none">Nueva Era Crossfit</span>
             </div>
-            <h1 className="font-sans text-6xl md:text-[10rem] font-black text-white leading-[0.85] mb-8 tracking-tighter">
+            <h1 className="font-sans text-4xl sm:text-6xl md:text-[10rem] font-black text-white leading-[0.85] mb-8 tracking-tighter">
               DOMINA EL <br />
               <span className="bg-linear-to-br from-[#c2c1ff] to-[#5e5ce6] bg-clip-text text-transparent">
                 CAOS.
               </span>
             </h1>
-            <p className="text-white/80 text-xl md:text-3xl max-w-3xl mx-auto mb-12 font-medium leading-tight">
+            <p className="text-white/80 text-lg md:text-3xl max-w-3xl mx-auto mb-12 font-medium leading-tight">
               Gestiona tu box con la precisión de un atleta de élite. Sin fricciones, sin límites.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
@@ -106,8 +103,8 @@ export default function Page() {
         </section>
 
         {/* Chapter 01 - Datos que Hablan */}
-        <section className="relative bg-black pt-60 pb-40">
-          <div className="max-w-7xl mx-auto px-10">
+        <section className="relative bg-black pt-32 md:pt-60 pb-24 md:pb-40">
+          <div className="max-w-7xl mx-auto px-6 md:px-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
               <motion.div 
                 initial={{ opacity: 0, x: -50 }}
@@ -165,10 +162,10 @@ export default function Page() {
                 <span className="text-[#c2c1ff] font-black uppercase tracking-[0.3em] text-sm block mb-6">
                   Capítulo 01
                 </span>
-                <h2 className="text-5xl md:text-8xl font-black text-white leading-none mb-10 tracking-tight">
+                <h2 className="text-4xl sm:text-5xl md:text-8xl font-black text-white leading-none mb-10 tracking-tight">
                   DATOS QUE <br />HABLAN.
                 </h2>
-                <p className="text-zinc-400 text-xl md:text-2xl leading-relaxed">
+                <p className="text-zinc-400 text-lg md:text-2xl leading-relaxed">
                   No más hojas de cálculo. Visualiza la salud de tu box en tiempo real. Asistencia, ingresos y
                   rendimiento en una sola pantalla de alto impacto.
                 </p>
@@ -178,8 +175,8 @@ export default function Page() {
         </section>
 
         {/* Chapter 02 - Programación Sin Esfuerzo */}
-        <section className="relative bg-zinc-950 py-40 overflow-hidden">
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[60%] opacity-20">
+        <section className="relative bg-zinc-950 py-24 md:py-40 overflow-hidden">
+          <div className="absolute -right-20 md:right-0 top-1/2 -translate-y-1/2 w-[120%] sm:w-[70%] md:w-[60%] opacity-20 pointer-events-none">
             <img
               alt="WOD"
               className="w-full"
@@ -190,16 +187,16 @@ export default function Page() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: false, amount: 0.2 }}
-            className="max-w-7xl mx-auto px-10 relative z-10"
+            className="max-w-7xl mx-auto px-6 md:px-10 relative z-10"
           >
             <div className="max-w-3xl">
               <motion.span variants={cardVariants} className="text-[#ffc07a] font-black uppercase tracking-[0.3em] text-sm block mb-6">
                 Capítulo 02
               </motion.span>
-              <motion.h2 variants={cardVariants} className="text-5xl md:text-8xl font-black text-white leading-none mb-10 tracking-tight">
+              <motion.h2 variants={cardVariants} className="text-4xl sm:text-5xl md:text-8xl font-black text-white leading-none mb-10 tracking-tight">
                 PROGRAMACIÓN <br />SIN ESFUERZO.
               </motion.h2>
-              <motion.p variants={cardVariants} className="text-zinc-400 text-xl md:text-2xl leading-relaxed mb-12">
+              <motion.p variants={cardVariants} className="text-zinc-400 text-lg md:text-2xl leading-relaxed mb-12">
                 Crea WODs complejos en segundos. Tus atletas reciben notificaciones instantáneas y pueden reservar su
                 plaza con un solo toque desde su móvil.
               </motion.p>
@@ -226,8 +223,8 @@ export default function Page() {
         </section>
 
         {/* Chapter 03 - Finanzas en Piloto Automático */}
-        <section className="relative bg-black py-40">
-          <div className="max-w-7xl mx-auto px-10">
+        <section className="relative bg-black py-24 md:py-40">
+          <div className="max-w-7xl mx-auto px-6 md:px-10">
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
@@ -238,11 +235,11 @@ export default function Page() {
               <span className="text-[#47e266] font-black uppercase tracking-[0.3em] text-sm block mb-6">
                 Capítulo 03
               </span>
-              <h2 className="text-5xl md:text-9xl font-black text-white leading-none mb-10 tracking-tight">
+              <h2 className="text-4xl sm:text-5xl md:text-9xl font-black text-white leading-none mb-10 tracking-tight">
                 FINANZAS EN <br />
                 <span className="text-[#47e266]">PILOTO AUTOMÁTICO.</span>
               </h2>
-              <p className="text-zinc-400 text-xl md:text-3xl max-w-4xl leading-tight">
+              <p className="text-zinc-400 text-lg md:text-3xl max-w-4xl leading-tight">
                 Olvídate de perseguir pagos. Integración total con Stripe para cobros recurrentes, facturación
                 automática y control de morosidad.
               </p>
@@ -255,14 +252,14 @@ export default function Page() {
               className="grid grid-cols-1 md:grid-cols-3 gap-8"
             >
               {/* Comunidad Plan */}
-              <motion.div variants={cardVariants} className="bg-zinc-900 p-12 rounded-[2.5rem] border border-white/5 flex flex-col justify-between h-[500px] hover:border-[#c2c1ff] transition-all">
+              <motion.div variants={cardVariants} className="bg-zinc-900 p-8 md:p-12 rounded-[2.5rem] border border-white/5 flex flex-col justify-between min-h-[450px] md:h-[500px] hover:border-[#c2c1ff] transition-all">
                 <div>
                   <div className="text-zinc-500 font-bold uppercase tracking-widest text-xs mb-4">Comunidad</div>
-                  <div className="text-5xl font-black text-white">
+                  <div className="text-4xl md:text-5xl font-black text-white">
                     $49<span className="text-xl font-medium text-zinc-500">/mes</span>
                   </div>
                 </div>
-                <ul className="space-y-4">
+                <ul className="space-y-4 my-8">
                   <li className="flex items-center gap-3">
                     <CheckCircle2 className="text-[#47e266] w-5 h-5" />
                     50 atletas
@@ -282,17 +279,17 @@ export default function Page() {
               </motion.div>
 
               {/* Elite Plan */}
-              <motion.div variants={cardVariants} className="bg-[#c2c1ff] p-12 rounded-[3rem] flex flex-col justify-between h-[550px] -mt-6 shadow-2xl shadow-indigo-500/20 relative">
+              <motion.div variants={cardVariants} className="bg-[#c2c1ff] p-8 md:p-12 rounded-[3rem] flex flex-col justify-between min-h-[480px] md:h-[550px] md:-mt-6 shadow-2xl shadow-indigo-500/20 relative">
                 <div className="absolute top-8 right-8 bg-black text-white text-[10px] font-black px-4 py-1 rounded-full uppercase tracking-widest">
                   Best Choice
                 </div>
                 <div>
                   <div className="text-[#1800a7] font-bold uppercase tracking-widest text-xs mb-4">Elite</div>
-                  <div className="text-6xl font-black text-[#1800a7]">
+                  <div className="text-5xl md:text-6xl font-black text-[#1800a7]">
                     $99<span className="text-xl font-medium opacity-60">/mes</span>
                   </div>
                 </div>
-                <ul className="space-y-4 text-[#1800a7]">
+                <ul className="space-y-4 text-[#1800a7] my-8">
                   <li className="flex items-center gap-3">
                     <CheckCircle2 className="w-5 h-5" />
                     Atletas Ilimitados
@@ -316,14 +313,14 @@ export default function Page() {
               </motion.div>
 
               {/* Franquicia Plan */}
-              <motion.div variants={cardVariants} className="bg-zinc-900 p-12 rounded-[2.5rem] border border-white/5 flex flex-col justify-between h-[500px] hover:border-[#c2c1ff] transition-all">
+              <motion.div variants={cardVariants} className="bg-zinc-900 p-8 md:p-12 rounded-[2.5rem] border border-white/5 flex flex-col justify-between min-h-[450px] md:h-[500px] hover:border-[#c2c1ff] transition-all">
                 <div>
                   <div className="text-zinc-500 font-bold uppercase tracking-widest text-xs mb-4">Franquicia</div>
-                  <div className="text-5xl font-black text-white">
+                  <div className="text-4xl md:text-5xl font-black text-white">
                     $199<span className="text-xl font-medium text-zinc-500">/mes</span>
                   </div>
                 </div>
-                <ul className="space-y-4">
+                <ul className="space-y-4 my-8">
                   <li className="flex items-center gap-3">
                     <CheckCircle2 className="text-[#47e266] w-5 h-5" />
                     Multi-box
@@ -348,13 +345,13 @@ export default function Page() {
         {/* CTA Section */}
         <section className="py-40 bg-indigo-600 relative overflow-hidden">
           <div className="absolute inset-0 bg-black/20"></div>
-          <div className="max-w-5xl mx-auto px-10 text-center relative z-10">
+          <div className="max-w-5xl mx-auto px-6 md:px-10 text-center relative z-10">
             <motion.h2 
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: false }}
               transition={{ duration: 0.8 }}
-              className="text-6xl md:text-9xl font-black text-white leading-[0.85] mb-12 tracking-tighter"
+              className="text-4xl sm:text-6xl md:text-9xl font-black text-white leading-[0.85] mb-12 tracking-tighter"
             >
               TRANSFORMA TU BOX <br /> HOY MISMO.
             </motion.h2>
@@ -384,7 +381,7 @@ export default function Page() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-black py-24 px-10 border-t border-white/5">
+      <footer className="bg-black py-24 px-6 md:px-10 border-t border-white/5">
         <motion.div 
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
