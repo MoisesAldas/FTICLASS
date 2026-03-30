@@ -18,7 +18,7 @@ export default function DashboardLayout({
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset className="bg-[#0a0a0c]">
-        <header className="flex h-[4.5rem] shrink-0 items-center justify-between px-6 md:px-8 bg-[#0a0a0c] border-b border-white/5 sticky top-0 z-50">
+        <header className="flex h-16 shrink-0 items-center justify-between px-6 md:px-8 bg-[#0a0a0c] border-b border-white/5 sticky top-0 z-50">
           <div className="flex items-center gap-4 md:gap-8 flex-1 max-w-2xl min-w-0">
             <SidebarTrigger className="text-zinc-500 hover:text-white shrink-0" />
 
