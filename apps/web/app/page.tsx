@@ -16,6 +16,8 @@ import {
   User,
   CheckCircle2
 } from "lucide-react"
+import Link from "next/link"
+import { Button } from "@workspace/ui/components/button"
 
 export default function Page() {
   const [activeSection, setActiveSection] = useState(0)
@@ -48,9 +50,14 @@ export default function Page() {
             <a href="#precios" className="text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors">Precios</a>
           </div>
         </div>
-        <button className="bg-white text-black text-[10px] md:text-xs font-black uppercase tracking-[0.2em] px-4 md:px-8 py-3 md:py-4 rounded-full hover:scale-105 transition-transform shrink-0">
-          ACCESO ELITE
-        </button>
+        <div className="flex items-center gap-4 md:gap-6">
+          <Link href="/login" className="text-white font-bold text-sm md:text-base hover:text-[#c2c1ff] transition-colors">
+            Login
+          </Link>
+          <Button className="font-black" variant="fitclass-nav" size="fitclass-nav">
+            ACCESO ELITE
+          </Button>
+        </div>
       </nav>
 
       <main>
@@ -88,12 +95,12 @@ export default function Page() {
               Gestiona tu box con la precisión de un atleta de élite. Sin fricciones, sin límites.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <button className="bg-linear-to-br from-[#5e5ce6] to-[#4d4ad5] text-white px-12 py-5 rounded-full font-black text-xl hover:scale-105 transition-transform shadow-2xl shadow-indigo-500/40 w-full sm:w-[280px]">
+              <Button variant="fitclass-primary" size="fitclass-hero" className="font-black w-full rounded-full sm:w-[280px]">
                 EMPEZAR AHORA
-              </button>
-              <button className="bg-white/10 backdrop-blur-2xl border border-white/20 text-white px-12 py-5 rounded-full font-black text-xl hover:bg-white/20 transition-all w-full sm:w-[280px]">
+              </Button>
+              <Button variant="fitclass-secondary" size="fitclass-hero" className="font-black w-full rounded-full sm:w-[280px]">
                 VER INTERFAZ
-              </button>
+              </Button>
             </div>
           </motion.div>
           <div className="absolute -bottom-27 inset-x-0 flex flex-col items-center gap-4 z-40 pointer-events-none">
@@ -113,7 +120,7 @@ export default function Page() {
                 transition={{ duration: 0.8 }}
                 className="order-2 lg:order-1"
               >
-                <div className="bg-[#131315]/60 backdrop-blur-2xl border border-white/10 rounded-[3rem] p-10 shadow-[0_0_80px_-20px_rgba(94,92,230,0.3)] relative overflow-hidden">
+                <div className="bg-[#131315]/60 backdrop-blur-2xl border border-white/10 rounded-lg p-10 shadow-[0_0_80px_-20px_rgba(94,92,230,0.3)] relative overflow-hidden">
                   <div className="flex justify-between items-start mb-12">
                     <div>
                       <div className="text-6xl font-black text-white">142</div>
@@ -135,7 +142,7 @@ export default function Page() {
                     </div>
                   </div>
                   <div className="space-y-6">
-                    <div className="h-32 bg-white/5 rounded-2xl flex items-end gap-3 p-6">
+                    <div className="h-32 bg-white/5 rounded-lg flex items-end gap-3 p-6">
                       <div className="w-full bg-indigo-500/20 h-1/2 rounded-t-lg"></div>
                       <div className="w-full bg-indigo-500/40 h-3/4 rounded-t-lg"></div>
                       <div className="w-full bg-[#c2c1ff] h-full rounded-t-lg"></div>
@@ -208,8 +215,8 @@ export default function Page() {
                   <h4 className="text-white text-xl font-bold mb-2">Push Notifications</h4>
                   <p className="text-zinc-500 text-sm">Mantén a tu comunidad activa y enterada de cada nuevo reto.</p>
                 </motion.div>
-                <motion.div variants={cardVariants} className="bg-[#131315]/60 backdrop-blur-2xl border border-white/10 p-8 rounded-3xl">
-                  <div className="w-12 h-12 bg-[#ffc07a] rounded-2xl flex items-center justify-center mb-6">
+                <motion.div variants={cardVariants} className="bg-[#131315]/60 backdrop-blur-2xl border border-white/10 p-8 rounded-lg">
+                  <div className="w-12 h-12 bg-[#ffc07a] rounded-lg flex items-center justify-center mb-6">
                     <Calendar className="text-black w-6 h-6" />
                   </div>
                   <h4 className="text-white text-xl font-bold mb-2">Reservas Inteligentes</h4>
@@ -223,7 +230,7 @@ export default function Page() {
         </section>
 
         {/* Chapter 03 - Finanzas en Piloto Automático */}
-        <section className="relative bg-black py-24 md:py-40">
+        <section id="precios" className="relative bg-black py-24 md:py-40">
           <div className="max-w-7xl mx-auto px-6 md:px-10">
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
@@ -273,13 +280,13 @@ export default function Page() {
                     Pagos Manuales
                   </li>
                 </ul>
-                <button className="w-full py-5 rounded-2xl bg-zinc-800 text-white font-black hover:bg-white hover:text-black transition-all">
-                  SELECCIONAR
-                </button>
+                <Button className="font-black" variant="fitclass-dark" size="fitclass-pricing">
+                  DESCUBRIR
+                </Button>
               </motion.div>
 
               {/* Elite Plan */}
-              <motion.div variants={cardVariants} className="bg-[#c2c1ff] p-8 md:p-12 rounded-[3rem] flex flex-col justify-between min-h-[480px] md:h-[550px] md:-mt-6 shadow-2xl shadow-indigo-500/20 relative">
+              <motion.div variants={cardVariants} className="bg-[#c2c1ff] p-8 md:p-12 rounded-[2.5rem] flex flex-col justify-between min-h-[480px] md:h-[550px] md:-mt-6 shadow-2xl shadow-indigo-500/20 relative">
                 <div className="absolute top-8 right-8 bg-black text-white text-[10px] font-black px-4 py-1 rounded-full uppercase tracking-widest">
                   Best Choice
                 </div>
@@ -307,9 +314,9 @@ export default function Page() {
                     Soporte Prioritario
                   </li>
                 </ul>
-                <button className="w-full py-5 rounded-2xl bg-black text-white font-black hover:scale-105 transition-transform">
+                <Button className="font-black" variant="fitclass-elite" size="fitclass-pricing">
                   EMPEZAR ELITE
-                </button>
+                </Button>
               </motion.div>
 
               {/* Franquicia Plan */}
@@ -334,9 +341,9 @@ export default function Page() {
                     CRM Full
                   </li>
                 </ul>
-                <button className="w-full py-5 rounded-2xl bg-zinc-800 text-white font-black hover:bg-white hover:text-black transition-all">
+                <Button className="font-black" variant="fitclass-dark" size="fitclass-pricing">
                   CONTACTAR
-                </button>
+                </Button>
               </motion.div>
             </motion.div>
           </div>
@@ -362,9 +369,9 @@ export default function Page() {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="flex flex-col md:flex-row gap-6 justify-center items-center"
             >
-              <button className="bg-white text-black px-16 py-8 rounded-full font-black text-2xl hover:bg-black hover:text-white transition-all shadow-2xl">
+              <Button  className="rounded-full font-black" variant="fitclass-cta" size="fitclass-cta">
                 EMPEZAR PRUEBA GRATIS
-              </button>
+              </Button>
               <div className="flex flex-col items-start text-left text-white/80 font-bold">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="w-5 h-5 text-indigo-200" />

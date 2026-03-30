@@ -10,26 +10,46 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-primary text-primary-foreground hover:bg-primary/80",
-        outline:
-          "border-border bg-input/30 hover:bg-input/50 hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground",
-        secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
-        ghost:
-          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
         destructive:
-          "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline:
+          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        // --- FITCLASS custom (para marketing + app) ---
+        "fitclass-primary":
+          "bg-linear-to-br from-[#5e5ce6] to-[#4d4ad5] text-white rounded-2xl shadow-lg shadow-indigo-500/10 hover:bg-[#4d4ad5] transition-all font-bold",
+        "fitclass-secondary":
+          "bg-white/10 backdrop-blur-2xl border border-white/20 text-white rounded-2xl hover:bg-white/20 transition-all font-semibold",
+        "fitclass-cta":
+          "bg-white text-black rounded-2xl hover:bg-black hover:text-white shadow-2xl transition-all font-bold",
+        "fitclass-dark":
+          "bg-zinc-800 text-white rounded-2xl hover:bg-white hover:text-black transition-all font-semibold",
+        "fitclass-elite":
+          "bg-black text-white rounded-2xl hover:scale-105 transition-all font-bold",
+        "fitclass-nav":
+          "bg-white text-black rounded-2xl hover:bg-[#c2c1ff] transition-colors shrink-0 font-bold",
+        "fitclass-ghost":
+          "text-white font-semibold hover:text-[#c2c1ff] transition-colors",
       },
       size: {
-        default:
-          "h-9 gap-1.5 px-3 has-data-[icon=inline-end]:pr-2.5 has-data-[icon=inline-start]:pl-2.5",
-        xs: "h-6 gap-1 px-2.5 text-xs has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-8 gap-1 px-3 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-        lg: "h-10 gap-1.5 px-4 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
+        default: "h-10 px-4 py-2",
+        xs: "h-6 px-2.5 text-xs",
+        sm: "h-8 px-3 text-sm",
+        lg: "h-10 px-4 text-sm",
         icon: "size-9",
-        "icon-xs": "size-6 [&_svg:not([class*='size-'])]:size-3",
+        "icon-xs": "size-6",
         "icon-sm": "size-8",
         "icon-lg": "size-10",
+        // --- FITCLASS sizes ---
+        "fitclass-hero": "px-12 py-5 text-xl h-auto",
+        "fitclass-cta": "px-16 py-8 text-2xl h-auto",
+        "fitclass-nav": "px-6 md:px-8 py-2.5 md:py-3 text-xs md:text-sm h-auto",
+        "fitclass-pricing": "w-full py-5 text-base h-auto",
+        "fitclass-compact":
+          "px-4 py-3 text-[11px] md:text-xs tracking-tight h-auto font-semibold",
       },
     },
     defaultVariants: {
