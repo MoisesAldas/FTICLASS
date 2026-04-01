@@ -58,7 +58,7 @@ export function LoginForm({
               {/* Logo & Heading */}
               <motion.div
                 variants={fadeUp}
-                className="flex flex-col items-center gap-4 text-center mb-8"
+                className="flex flex-col items-center gap-4 text-center mb-2"
               >
                 <div>
                   <h1 className="text-3xl font-black text-white tracking-tight">

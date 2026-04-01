@@ -66,21 +66,19 @@ function WodCard({ wod }: { wod: typeof MOCK_WODS[0] }) {
       </ModalPrimitive>
 
       <ActionCard 
-        isActive={wod.destacado} 
-        decoratorIcon={<Dumbbell className="size-20 opacity-50" />}
+        isActive={false} 
+        decoratorIcon={<Dumbbell className="size-20 opacity-50 text-zinc-800" />}
       >
          <ActionCardHeader className="pb-4">
             <div className="flex items-start gap-4">
-               <ActionCardAvatar className={wod.destacado ? "bg-indigo-500/10 border-indigo-500/20" : ""}>
-                  <Dumbbell className={cn("size-5", wod.destacado ? "text-indigo-400" : "text-zinc-400")} />
+               <ActionCardAvatar className="bg-white/3 border-white/5">
+                  <Dumbbell className="size-5 text-zinc-400" />
                </ActionCardAvatar>
                
                <div className="space-y-1.5 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <h3 className="text-2xl font-black text-white tracking-tighter truncate">{wod.titulo}</h3>
-                    {wod.destacado && (
-                      <CheckCircle2 className="size-4 shrink-0 text-indigo-500" />
-                    )}
+                    <CheckCircle2 className="size-4 shrink-0 text-indigo-500" />
                   </div>
                   <ActionCardTags>
                      <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black uppercase tracking-widest text-indigo-400 inline-flex items-center gap-1.5">

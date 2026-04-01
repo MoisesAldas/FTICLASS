@@ -8,7 +8,7 @@ const ActionTableRoot = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "relative w-full overflow-hidden rounded-lg border border-white/5 bg-zinc-950 shadow-2xl",
+      "relative w-full overflow-hidden rounded-lg border border-white/5 bg-zinc-950",
       className
     )}
     {...props}

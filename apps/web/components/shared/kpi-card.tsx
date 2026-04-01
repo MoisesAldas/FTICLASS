@@ -20,11 +20,11 @@ export interface KpiCardProps {
 
 const variants = {
   emerald: {
-    text: "text-[#c2c1ff]",
-    bg: "bg-[#5e5ce6]/10",
-    active: "bg-[#5e5ce6] text-white ring-1 ring-white/10 shadow-lg shadow-indigo-500/10",
-    hover: "hover:border-[#5e5ce6]/25",
-    trend: "bg-[#5e5ce6]/25 text-[#c2c1ff]",
+    text: "text-emerald-400",
+    bg: "bg-emerald-500/10",
+    active: "bg-emerald-600 text-white ring-1 ring-white/10 shadow-lg shadow-emerald-500/10",
+    hover: "hover:border-emerald-500/25",
+    trend: "bg-emerald-500/25 text-emerald-400",
   },
   indigo: {
     text: "text-[#c2c1ff]",
@@ -66,6 +66,7 @@ export function KpiCard({
   variant = "indigo",
   className,
   index = 0,
+  icon: Icon = ArrowUpRight,
 }: KpiCardProps) {
   const config = variants[variant]
 
@@ -77,11 +78,11 @@ export function KpiCard({
       className={className}
     >
       <Card className={cn(
-        "border-white/5 rounded-3xl group transition-all duration-500 relative min-h-[124px] flex flex-col justify-between overflow-hidden",
-        isActive ? config.active : "bg-zinc-900/90 hover:bg-zinc-900",
+        "border-white/5 rounded-[32px] group transition-all duration-500 relative min-h-[124px] flex flex-col justify-between overflow-hidden",
+        isActive ? config.active : "bg-zinc-950/50 hover:bg-[#131315]/80",
         !isActive && config.hover
       )}>
-        <CardContent className="px-4 pt-2 pb-2.5 flex flex-col justify-between h-full gap-0.5">
+        <CardContent className="px-5 pt-3 pb-4 flex flex-col justify-between h-full gap-0.5">
           <div className="flex justify-between items-start">
             <span className={cn(
               "text-sm font-semibold tracking-tight leading-snug",
@@ -91,15 +92,15 @@ export function KpiCard({
             </span>
             <div className={cn(
               "size-9 rounded-full border flex items-center justify-center transition-all duration-300",
-              isActive ? "border-white/20 bg-white/10" : "border-white/10 group-hover:bg-white/5 group-hover:rotate-45"
+              isActive ? "border-white/20 bg-white/10" : "border-white/10 group-hover:bg-white/5"
             )}>
-              <ArrowUpRight className={cn("size-4", isActive ? "text-white" : "text-zinc-400")} />
+              <Icon className={cn("size-4", isActive ? "text-white" : "text-zinc-400")} />
             </div>
           </div>
 
           <div>
             <h3 className={cn(
-              "text-4xl sm:text-5xl font-black tracking-tighter",
+              "text-4xl font-bold tracking-tighter leading-none mb-2",
               isActive ? "text-white" : "text-white"
             )}>
               {value}
@@ -108,7 +109,7 @@ export function KpiCard({
             <div className="flex items-center gap-2.5 flex-wrap">
               {trend && (
                 <div className={cn(
-                  "px-1.5 py-0.5 rounded-md text-[11px] font-bold flex items-center justify-center tabular-nums",
+                  "px-2.5 py-0.5 rounded-full text-[11px] font-bold flex items-center justify-center tabular-nums",
                   isActive ? "bg-white/20 text-white" : config.trend
                 )}>
                   {trend}

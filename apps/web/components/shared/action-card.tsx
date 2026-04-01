@@ -21,10 +21,10 @@ export const ActionCard = React.forwardRef<HTMLDivElement, ActionCardProps>(
       <div
         ref={ref}
         className={cn(
-          "group flex flex-col rounded-[32px] border bg-zinc-950 shadow-2xl relative overflow-hidden transition-all duration-300",
+          "group flex flex-col rounded-[32px] border bg-zinc-950 relative overflow-hidden transition-all duration-300",
           isActive 
             ? "border-indigo-500/30" 
-            : "border-white/5 hover:border-indigo-500/20",
+            : "border-white/5",
           className
         )}
         {...props}
@@ -78,34 +78,43 @@ export interface ActionCardFooterProps extends React.HTMLAttributes<HTMLDivEleme
 
 /**
  * Pre-coded dynamic structural footer.
- * Strictly guarantees the presence of 'Editar' and 'Eliminar'.
+ * Renders 'Editar' and 'Eliminar' only if handlers are provided.
  */
 export const ActionCardFooter = React.forwardRef<HTMLDivElement, ActionCardFooterProps>(
-  ({ className, onEdit, onDelete, ...props }, ref) => (
+  ({ className, onEdit, onDelete, children, ...props }, ref) => (
     <div
       ref={ref}
       className={cn(
-        "px-6 py-4 flex items-center justify-between gap-3 shrink-0 z-10",
+        "px-6 py-4 flex flex-col gap-3 shrink-0 z-10",
         className
       )}
       {...props}
     >
-      <Button 
-        variant="ghost" 
-        onClick={onEdit}
-        className="flex-1 h-11 rounded-2xl bg-zinc-900 border border-white/5 text-[11px] font-black uppercase tracking-widest text-zinc-300 hover:text-white hover:bg-zinc-800 transition-all"
-      >
-        <Edit2 className="size-3.5 mr-2" />
-        Editar
-      </Button>
-      <Button 
-        variant="ghost" 
-        onClick={onDelete}
-        className="flex-1 h-11 rounded-2xl bg-red-500/5 border border-red-500/10 text-[11px] font-black uppercase tracking-widest text-red-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
-      >
-        <Trash2 className="size-3.5 mr-2" />
-        Eliminar
-      </Button>
+      {children}
+      {(onEdit || onDelete) && (
+        <div className="flex items-center justify-between gap-3 pt-2">
+          {onEdit && (
+            <Button 
+              variant="ghost" 
+              onClick={onEdit}
+              className="flex-1 h-11 rounded-2xl bg-zinc-900 border border-white/5 text-[11px] font-black uppercase tracking-widest text-zinc-300 hover:text-white hover:bg-zinc-800 transition-all font-sans"
+            >
+              <Edit2 className="size-3.5 mr-2" />
+              Editar
+            </Button>
+          )}
+          {onDelete && (
+            <Button 
+              variant="ghost" 
+              onClick={onDelete}
+              className="flex-1 h-11 rounded-2xl bg-red-500/5 border border-red-500/10 text-[11px] font-black uppercase tracking-widest text-red-500 hover:text-red-400 hover:bg-red-500/10 transition-all font-sans"
+            >
+              <Trash2 className="size-3.5 mr-2" />
+              Eliminar
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   )
 )

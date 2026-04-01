@@ -60,6 +60,7 @@ const menuGroups: { menu: NavItem[]; general: NavItem[] } = {
       title: "Planificación",
       icon: CalendarDays,
       items: [
+        { title: "Pizarra Digital", icon: Award, url: "/dashboard/pizarra" },
         { title: "Clases", icon: CalendarDays, url: "/dashboard/clases" },
         { title: "Horarios", icon: Clock, url: "/dashboard/horarios" },
         { title: "Librería WODs", icon: Flame, url: "/dashboard/wods" },
@@ -73,12 +74,12 @@ const menuGroups: { menu: NavItem[]; general: NavItem[] } = {
         { title: "Atletas", icon: Users, url: "/dashboard/atletas" },
         { title: "Staff", icon: Award, url: "/dashboard/staff" },
         { title: "Membresías", icon: ShieldCheck, url: "/dashboard/membresias" },
-        { title: "Pagos", icon: CreditCard, url: "/dashboard/payments" },
+        { title: "Pagos", icon: CreditCard, url: "/dashboard/pagos" },
       ]
     }
   ],
   general: [
-    { title: "Ajustes", icon: Settings, url: "/dashboard/settings" },
+    { title: "Ajustes", icon: Settings, url: "/dashboard/ajustes" },
     { title: "Cerrar sesión", icon: LogOut, url: "/" },
   ],
 }

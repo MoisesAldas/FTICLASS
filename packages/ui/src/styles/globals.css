@@ -127,3 +127,16 @@
     @apply bg-background text-foreground transition-colors duration-500;
     }
 }
+
+@layer utilities {
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  .shadow-glow {
+    box-shadow: 0 0 20px rgba(94, 92, 230, 0.3);
+  }
+}

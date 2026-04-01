@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { useForm, Controller } from "react-hook-form"
 import * as z from "zod"
 import { Loader2, Mail, Phone, LayoutGrid, Award } from "lucide-react"
 import { toast } from "sonner"
@@ -18,6 +18,7 @@ import {
 
 import { ActionButton } from "../shared/action-button"
 import { SelectPrimitive } from "../shared/select-primitive"
+import { PhoneInput } from "../shared/phone-input"
 
 const staffSchema = z.object({
   nombre: z.string().min(2, "Mínimo 2 caracteres"),
@@ -43,6 +44,7 @@ export function AddStaffForm({ onSuccess, onCancel }: AddStaffFormProps) {
     handleSubmit,
     setValue,
     watch,
+    control,
     formState: { errors },
   } = useForm<StaffFormValues>({
     resolver: zodResolver(staffSchema),
@@ -123,14 +125,17 @@ export function AddStaffForm({ onSuccess, onCancel }: AddStaffFormProps) {
 
           <Field orientation="vertical">
             <FieldLabel className="text-zinc-500 font-semibold text-[11px] tracking-wider px-1">Teléfono Móvil (Opcional)</FieldLabel>
-            <div className="relative">
-              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input 
-                {...register("telefono")}
-                placeholder="+1 234 567 890" 
-                className={`rounded-2xl bg-zinc-900/50 border-white/10 focus:border-indigo-500/50 h-11 pl-12 transition-all text-white ${errors.telefono ? "border-red-500/50" : ""}`}
-              />
-            </div>
+            <Controller
+              name="telefono"
+              control={control}
+              render={({ field }) => (
+                <PhoneInput 
+                  {...field}
+                  placeholder="Ej. 099 123 4567"
+                  className={errors.telefono ? "border-red-500/50" : ""}
+                />
+              )}
+            />
             <FieldError errors={[errors.telefono]} />
           </Field>
         </div>

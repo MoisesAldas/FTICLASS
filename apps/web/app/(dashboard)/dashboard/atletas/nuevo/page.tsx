@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { useForm, Controller } from "react-hook-form"
 import * as z from "zod"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
@@ -38,6 +38,7 @@ import {
   PopoverTrigger,
 } from "@workspace/ui/components/popover"
 import { Checkbox } from "@workspace/ui/components/checkbox"
+import { PhoneInput } from "@/components/shared/phone-input"
 import {
   Field,
   FieldGroup,
@@ -70,6 +71,7 @@ export default function NuevoAtletaPage() {
     handleSubmit,
     setValue,
     watch,
+    control,
     formState: { errors },
   } = useForm<AthleteFormValues>({
     resolver: zodResolver(athleteSchema),
@@ -215,14 +217,17 @@ export default function NuevoAtletaPage() {
 
                 <Field orientation="vertical">
                   <FieldLabel className="text-indigo-200/50 uppercase text-[10px] font-black tracking-[0.3em] px-1">Teléfono</FieldLabel>
-                  <div className="relative">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" data-icon="inline-start" />
-                    <Input 
-                      {...register("phone")}
-                      placeholder="+34 600 000 000" 
-                      className="rounded-lg bg-zinc-900/50 border-white/10 focus:border-indigo-500/50 h-12 pl-12 transition-all"
-                    />
-                  </div>
+                  <Controller
+                    name="phone"
+                    control={control}
+                    render={({ field }) => (
+                      <PhoneInput 
+                        {...field}
+                        placeholder="Ej. 099 123 4567"
+                        className="rounded-lg"
+                      />
+                    )}
+                  />
                   <FieldError errors={[errors.phone]} />
                 </Field>
               </div>

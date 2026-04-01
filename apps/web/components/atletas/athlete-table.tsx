@@ -3,6 +3,7 @@
 import * as React from "react"
 import { MoreHorizontal, Mail, Phone, Calendar as CalendarIcon, User, ExternalLink } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import Link from "next/link"
 
 import { cn } from "@workspace/ui/lib/utils"
 import { 
@@ -94,7 +95,15 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
-export function AthleteTable() {
+export function AthleteTable({ filter = "all" }: { filter?: string }) {
+  const filteredAthletes = React.useMemo(() => {
+    if (filter === "all") return MOCK_ATHLETES
+    if (filter === "active") return MOCK_ATHLETES.filter(a => a.status === "active")
+    if (filter === "debtors") return MOCK_ATHLETES.filter(a => a.status === "inactive") // currently "inactive" means debtor in this mock context
+    if (filter === "expiring") return MOCK_ATHLETES.filter(a => a.status === "active") // mock constraint, pretend everyone active is expiring
+    return MOCK_ATHLETES
+  }, [filter])
+
   return (
     <ActionTableRoot>
       <ActionTable>
@@ -111,12 +120,14 @@ export function AthleteTable() {
           </tr>
         </ActionTableHeader>
         <ActionTableBody>
-          <AnimatePresence>
-            {MOCK_ATHLETES.map((athlete, i) => (
+          <AnimatePresence mode="popLayout">
+            {filteredAthletes.map((athlete, i) => (
               <motion.tr
                 key={athlete.id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ delay: i * 0.05 }}
                 className="group border-b border-white/5 last:border-0 hover:bg-white/2 transition-colors cursor-default"
               >
@@ -175,9 +186,11 @@ export function AthleteTable() {
                     <DropdownMenuContent align="end" className="rounded-2xl border-white/5 bg-zinc-950/90 backdrop-blur-xl shadow-2xl p-2 min-w-[180px]">
                       <DropdownMenuLabel className="text-[11px] font-semibold tracking-wider text-zinc-500 px-3 py-2">Opciones</DropdownMenuLabel>
                       <DropdownMenuSeparator className="bg-white/5" />
-                      <DropdownMenuItem className="rounded-xl focus:bg-indigo-500/10 focus:text-indigo-400 font-semibold text-xs px-3 py-2 gap-2 cursor-pointer transition-colors">
-                        <User className="size-3.5" />
-                        Ver perfil
+                      <DropdownMenuItem asChild className="rounded-xl focus:bg-indigo-500/10 focus:text-indigo-400 font-semibold text-xs px-3 py-2 gap-2 cursor-pointer transition-colors">
+                        <Link href={`/dashboard/atletas/${athlete.id}`}>
+                          <User className="size-3.5" />
+                          Ver perfil
+                        </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem className="rounded-xl focus:bg-indigo-500/10 focus:text-indigo-400 font-semibold text-xs px-3 py-2 gap-2 cursor-pointer transition-colors">
                         <ExternalLink className="size-3.5" />
@@ -196,7 +209,7 @@ export function AthleteTable() {
         </ActionTableBody>
       </ActionTable>
       <div className="p-6 border-t border-white/5 bg-white/1 flex items-center justify-between">
-         <p className="text-[11px] font-semibold text-zinc-500 tracking-wider">Mostrando {MOCK_ATHLETES.length} atletas de un total de 1,248</p>
+         <p className="text-[11px] font-semibold text-zinc-500 tracking-wider">Mostrando {filteredAthletes.length} atletas de un total de 1,248</p>
          <div className="flex gap-2">
             <Button variant="outline" size="sm" className="rounded-2xl h-9 px-4 border-white/5 bg-white/5 hover:bg-white/10 text-xs font-bold disabled:opacity-30" disabled>Anterior</Button>
             <Button variant="outline" size="sm" className="rounded-2xl h-9 px-4 border-white/5 bg-white/5 hover:bg-white/10 text-xs font-bold">Siguiente</Button>

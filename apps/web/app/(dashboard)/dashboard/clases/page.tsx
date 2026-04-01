@@ -7,9 +7,9 @@ import { AddClassModal } from "@/components/clases/add-class-modal"
 import { DatePicker } from "@/components/shared/date-picker"
 import { SelectPrimitive } from "@/components/shared/select-primitive"
 import { ActionCard, ActionCardHeader, ActionCardContent, ActionCardFooter, ActionCardAvatar, ActionCardTags, ActionCardProgress } from "@/components/shared/action-card"
-import { format } from "date-fns"
+import { format, isSameDay } from "date-fns"
 import { es } from "date-fns/locale"
-
+import { AttendanceModal } from "@/components/clases/attendance-modal"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Switch } from "@workspace/ui/components/switch"
@@ -23,8 +23,24 @@ const MOCK_CLASES = [
 
 export default function ClasesPage() {
   const [allowBooking, setAllowBooking] = React.useState(true)
-  const [startDate, setStartDate] = React.useState<Date>(new Date("2026-03-29"))
-  const [endDate, setEndDate] = React.useState<Date>(new Date("2026-03-29"))
+  const TODAY = new Date("2026-03-30") // Mocking today as March 30
+  const [startDate, setStartDate] = React.useState<Date>(TODAY)
+  const [endDate, setEndDate] = React.useState<Date>(TODAY)
+  const [selectedClass, setSelectedClass] = React.useState<any>(null)
+  const [isAttendanceOpen, setIsAttendanceOpen] = React.useState(false)
+
+  const isTodayView = React.useMemo(() => isSameDay(startDate, TODAY) && isSameDay(endDate, TODAY), [startDate, endDate, TODAY])
+
+  const handleOpenAttendance = (clase: any) => {
+    setSelectedClass({
+      id: clase.id.toString(),
+      name: clase.servicio,
+      hour: clase.horario.split(" - ")[0],
+      coach: clase.coach,
+      capacity: clase.capacidad
+    })
+    setIsAttendanceOpen(true)
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -88,7 +104,14 @@ export default function ClasesPage() {
       {/* 2. Listado Section */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-           <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 px-1">Sesiones Consultadas</h2>
+           <div className="flex flex-col gap-1">
+              <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 px-1">Sesiones Consultadas</h2>
+              {isTodayView && (
+                 <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[9px] font-black uppercase tracking-widest w-fit border border-emerald-500/20">
+                    <div className="size-1 rounded-full bg-emerald-500 animate-pulse" /> Panel de hoy
+                 </span>
+              )}
+           </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -150,7 +173,15 @@ export default function ClasesPage() {
                 <ActionCardFooter 
                   onEdit={() => console.log('Edit class', clase.id)}
                   onDelete={() => console.log('Delete class', clase.id)}
-                />
+                  className="pt-0"
+                >
+                   <ActionButton 
+                     label="Gestionar Asistencia" 
+                     icon={<Users className="size-4 mr-2" />}
+                     className="w-full h-11 rounded-2xl bg-white/5 border-white/5 hover:bg-white/10 text-white font-black uppercase tracking-wider text-[10px]"
+                     onClick={() => handleOpenAttendance(clase)}
+                   />
+                </ActionCardFooter>
              </ActionCard>
            ))}
         </div>
@@ -176,6 +207,12 @@ export default function ClasesPage() {
            ))}
         </div>
       </section>
+
+      <AttendanceModal 
+        isOpen={isAttendanceOpen} 
+        onOpenChange={setIsAttendanceOpen} 
+        classData={selectedClass || { id: "", name: "", hour: "", coach: "", capacity: 0 }}
+      />
     </div>
   )
 }

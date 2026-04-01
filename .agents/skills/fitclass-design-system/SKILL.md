@@ -16,6 +16,7 @@ Este documento es la **fuente única de verdad** para la interfaz de FITCLASS. D
 - **Legibilidad**: Uso estricto de *Sentence Case* (Mayúscula inicial) para escaneo rápido.
 - **Radios**: Grandes y suaves (`rounded-2xl` a `rounded-[32px]`) para un look moderno y prémium.
 - **Densidad**: Limpia y espaciada, evitando la saturación de información.
+- **Elite Layout**: Uso de espaciado `gap-10` y herencia de padding global para una interfaz de "Monitor Total".
 
 ---
 
@@ -75,11 +76,39 @@ Utilizar siempre estos componentes para garantizar consistencia.
 
 ---
 
-## 5. Checklist Final de Calidad
+## 6. Arquitectura de Dashboards (Elite Layout)
+
+Para mantener la coherencia con el dashboard de **Atletas**, todas las páginas nuevas deben seguir esta estructura:
+
+- **Padding Global**: NO aplicar padding (`p-6`, etc.) en el componente de la página. El `SidebarInset` ya provee el espaciado necesario.
+- **Cabecera (Page Header)**:
+    - **Título**: `text-4xl font-bold tracking-tight text-white`. (Sentence Case: "Atletas", "Ajustes").
+    - **Iconografía**: NO usar iconos en el título principal para mantener un look limpio y profesional.
+    - **Subtítulo**: `text-zinc-500 text-sm font-medium max-w-xl`.
+    - **Acciones**: Botones de acción (`h-11`, `px-8`) alineados a la derecha en `md:flex-row`.
+- **Espaciado Vertical**: Usar `flex flex-col gap-10` como contenedor raíz para separar cabecera, tablas y KPIs.
+
+---
+
+## 7. Navegación Vertical (Complex Views)
+
+Para vistas de configuración o perfiles detallados:
+
+- **Grid Layout**: `grid md:grid-cols-[280px_1fr] gap-10`.
+- **Menú Lateral**:
+    - **Botones**: `px-5 py-4 rounded-2xl font-bold text-sm`.
+    - **Estado Activo**: Fondo `bg-white/5` + Borde `ring-1 ring-white/10` + Indicador de punto indigo (`size-2`) a la derecha con sombra.
+    - **Iconos**: `size-5` (Zinc 600 inactivo / Indigo 500 activo).
+- **Separador de Contenido**: El área de contenido debe tener un borde izquierdo `md:border-l border-white/5` y un padding de respiro `md:pl-12`.
+
+---
+
+## 8. Checklist Final de Calidad
 
 - [x] ¿El texto usa **Sentence Case** exclusivamente?
 - [x] ¿Se eliminaron todos los efectos de **Blur/Difuminado**?
-- [x] ¿El botón primario es sólido e Indigo (`#5e5ce6`)?
+- [x] ¿Se hereda el padding del layout global (sin duplicar `p-6`)?
+- [x] ¿El título de página es `text-4xl font-bold tracking-tight`?
 - [x] ¿Se respetan los radios de curvatura (`2xl/4xl`)?
 - [x] ¿La tipografía sigue la **Topología Expert**?
 - [x] ¿Se utilizan los componentes prémium (**Switch**, **Buttons**)?

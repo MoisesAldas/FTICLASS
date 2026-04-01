@@ -3,7 +3,7 @@
 import * as React from "react"
 import { toast } from "sonner"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { useForm, Controller } from "react-hook-form"
 import * as z from "zod"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
@@ -26,6 +26,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@workspace/ui/components/popover"
+import { PhoneInput } from "../shared/phone-input"
 import { Checkbox } from "@workspace/ui/components/checkbox"
 import { Switch } from "@workspace/ui/components/switch"
 import {
@@ -65,6 +66,7 @@ export function AddAthleteForm({ onSuccess, onCancel }: AddAthleteFormProps) {
     handleSubmit,
     setValue,
     watch,
+    control,
     formState: { errors },
   } = useForm<AthleteFormValues>({
     resolver: zodResolver(athleteSchema),
@@ -178,14 +180,17 @@ export function AddAthleteForm({ onSuccess, onCancel }: AddAthleteFormProps) {
 
           <Field orientation="vertical">
             <FieldLabel className="text-zinc-500 font-semibold text-[11px] tracking-wider px-1">Teléfono</FieldLabel>
-            <div className="relative">
-              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input 
-                {...register("phone")}
-                placeholder="+34 600..." 
-                className="rounded-lg bg-zinc-900/50 border-white/10 focus:border-indigo-500/50 h-11 pl-12 transition-all"
-              />
-            </div>
+            <Controller
+              name="phone"
+              control={control}
+              render={({ field }) => (
+                <PhoneInput 
+                  {...field}
+                  placeholder="Ej. 099 123 4567"
+                  className="rounded-2xl"
+                />
+              )}
+            />
             <FieldError errors={[errors.phone]} />
           </Field>
         </div>
