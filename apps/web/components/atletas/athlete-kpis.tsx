@@ -7,41 +7,82 @@ import { motion } from "framer-motion"
 import { cn } from "@workspace/ui/lib/utils"
 import { KpiCard } from "@/components/shared/kpi-card"
 
-const stats = [
-  {
-    label: "Total Atletas",
-    value: "1,248",
-    trend: "+12%",
-    icon: Users,
-    variant: "indigo" as const,
-  },
-  {
-    label: "Atletas Activos",
-    value: "842",
-    trend: "+5%",
-    icon: UserCheck,
-    variant: "indigo" as const,
-  },
-  {
-    label: "Inactivos",
-    value: "394",
-    trend: "-2%",
-    icon: UserMinus,
-    variant: "rose" as const,
-  },
-  {
-    label: "Por Vencer",
-    value: "12",
-    trend: "Hoy",
-    icon: AlertCircle,
-    variant: "amber" as const,
-  },
-]
+import { useSupabase } from "@/hooks/use-supabase"
 
 export function AthleteKpis() {
+  const { client, ready, gymId } = useSupabase()
+  const [counts, setCounts] = React.useState({ total: 0, active: 0, inactive: 0 })
+
+  const fetchCounts = React.useCallback(async () => {
+    if (!client || !gymId) return
+
+    try {
+      // 1. Total Atletas
+      const { count: total } = await client
+        .from('athletes')
+        .select('*', { count: 'exact', head: true })
+        .eq('gym_id', gymId)
+
+      // 2. Atletas Activos
+      const { count: active } = await client
+        .from('athletes')
+        .select('*', { count: 'exact', head: true })
+        .eq('gym_id', gymId)
+        .eq('is_active', true)
+
+      // 3. Inactivos
+      const { count: inactive } = await client
+        .from('athletes')
+        .select('*', { count: 'exact', head: true })
+        .eq('gym_id', gymId)
+        .eq('is_active', false)
+
+      setCounts({ total: total || 0, active: active || 0, inactive: inactive || 0 })
+    } catch (err) {
+      console.error("[AthleteKpis] Error fetching counts:", err)
+    }
+  }, [client, gymId])
+
+  React.useEffect(() => {
+    if (ready) {
+      fetchCounts()
+    }
+  }, [ready, fetchCounts])
+
+  const dynamicStats = [
+    {
+      label: "Total Atletas",
+      value: counts.total.toLocaleString(),
+      trend: "Total",
+      icon: Users,
+      variant: "indigo" as const,
+    },
+    {
+      label: "Atletas Activos",
+      value: counts.active.toLocaleString(),
+      trend: "En box",
+      icon: UserCheck,
+      variant: "indigo" as const,
+    },
+    {
+      label: "Inactivos",
+      value: counts.inactive.toLocaleString(),
+      trend: "Revisar",
+      icon: UserMinus,
+      variant: "rose" as const,
+    },
+    {
+      label: "Por Vencer",
+      value: "0",
+      trend: "Próximamente",
+      icon: AlertCircle,
+      variant: "amber" as const,
+    },
+  ]
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
-      {stats.map((stat, i) => (
+      {dynamicStats.map((stat, i) => (
         <KpiCard
           key={stat.label}
           title={stat.label}
@@ -50,7 +91,7 @@ export function AthleteKpis() {
           icon={stat.icon}
           variant={stat.variant}
           index={i}
-          trendLabel={stat.label === "Por Vencer" ? "Estado actual" : "vs. mes anterior"}
+          trendLabel={stat.label === "Por Vencer" ? "Estado actual" : "Métricas totales"}
         />
       ))}
     </div>

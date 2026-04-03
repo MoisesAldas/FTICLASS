@@ -7,8 +7,13 @@ import { ModalPrimitive } from "../shared/modal-primitive"
 import { ActionButton } from "../shared/action-button"
 import { AddScheduleForm } from "./add-schedule-form"
 
-export function AddScheduleModal() {
+export function AddScheduleModal({ onSuccess }: { onSuccess?: () => void }) {
   const [open, setOpen] = React.useState(false)
+
+  const handleSuccess = () => {
+    setOpen(false)
+    onSuccess?.()
+  }
 
   return (
     <ModalPrimitive 
@@ -20,7 +25,7 @@ export function AddScheduleModal() {
       
       maxWidth="sm:max-w-[720px]"
     >
-      <AddScheduleForm onSuccess={() => setOpen(false)} onCancel={() => setOpen(false)} />
+      <AddScheduleForm onSuccess={handleSuccess} onCancel={() => setOpen(false)} />
     </ModalPrimitive>
   )
 }

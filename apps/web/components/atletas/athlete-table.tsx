@@ -30,52 +30,7 @@ import {
   ActionTableCell 
 } from "@/components/shared/action-table"
 
-const MOCK_ATHLETES = [
-  {
-    id: "ATH-001",
-    firstName: "Juan",
-    lastName: "Pérez",
-    email: "juan.perez@email.com",
-    phone: "+34 600 123 456",
-    dni: "12345678A",
-    status: "active",
-    lastVisit: "2024-03-25",
-    avatar: "https://i.pravatar.cc/150?u=juan",
-  },
-  {
-    id: "ATH-002",
-    firstName: "María",
-    lastName: "Rosser",
-    email: "m.rosser@box.com",
-    phone: "+34 600 789 012",
-    dni: "87654321B",
-    status: "inactive",
-    lastVisit: "2024-02-12",
-    avatar: "https://i.pravatar.cc/150?u=maria",
-  },
-  {
-    id: "ATH-003",
-    firstName: "Alfredo",
-    lastName: "Curtis",
-    email: "alfredo.c@gym.com",
-    phone: "+34 600 345 678",
-    dni: "45678901C",
-    status: "pending",
-    lastVisit: "2024-03-20",
-    avatar: "https://i.pravatar.cc/150?u=alfredo",
-  },
-  {
-    id: "ATH-004",
-    firstName: "Giana",
-    lastName: "Botosh",
-    email: "giana.b@fitness.es",
-    phone: "+34 600 901 234",
-    dni: "23456789D",
-    status: "active",
-    lastVisit: "2024-03-27",
-    avatar: "https://i.pravatar.cc/150?u=giana",
-  },
-]
+import { useSupabase } from "@/hooks/use-supabase"
 
 function StatusBadge({ status }: { status: string }) {
   const configs = {
@@ -96,13 +51,74 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export function AthleteTable({ filter = "all" }: { filter?: string }) {
+  const { client, ready, gymId } = useSupabase()
+  const [athletes, setAthletes] = React.useState<any[]>([])
+  const [loading, setLoading] = React.useState(true)
+
+  const fetchAthletes = React.useCallback(async () => {
+    if (!client || !gymId) return
+
+    try {
+      setLoading(true)
+      const { data, error } = await client
+        .from('athletes')
+        .select(`
+          id,
+          is_active,
+          user_id,
+          created_at,
+          profiles (
+            full_name,
+            email,
+            phone,
+            dni,
+            avatar_url
+          )
+        `)
+        .eq('gym_id', gymId)
+
+      if (error) throw error
+
+      const mappedData = (data || []).map((a: any) => {
+        const fullName = a.profiles?.full_name || "Sin nombre"
+        const nameParts = fullName.split(" ")
+        const firstName = nameParts[0]
+        const lastName = nameParts.slice(1).join(" ")
+
+        return {
+          id: a.id,
+          firstName,
+          lastName,
+          email: a.profiles?.email || "",
+          phone: a.profiles?.phone || "",
+          dni: a.profiles?.dni || "",
+          status: a.is_active ? "active" : "inactive",
+          lastVisit: new Date(a.created_at).toLocaleDateString(),
+          avatar: a.profiles?.avatar_url,
+        }
+      })
+
+      setAthletes(mappedData)
+    } catch (err) {
+      console.error("[AthleteTable] Error fetching athletes:", err)
+    } finally {
+      setLoading(false)
+    }
+  }, [client, gymId])
+
+  React.useEffect(() => {
+    if (ready) {
+      fetchAthletes()
+    }
+  }, [ready, fetchAthletes])
+
   const filteredAthletes = React.useMemo(() => {
-    if (filter === "all") return MOCK_ATHLETES
-    if (filter === "active") return MOCK_ATHLETES.filter(a => a.status === "active")
-    if (filter === "debtors") return MOCK_ATHLETES.filter(a => a.status === "inactive") // currently "inactive" means debtor in this mock context
-    if (filter === "expiring") return MOCK_ATHLETES.filter(a => a.status === "active") // mock constraint, pretend everyone active is expiring
-    return MOCK_ATHLETES
-  }, [filter])
+    if (filter === "all") return athletes
+    if (filter === "active") return athletes.filter(a => a.status === "active")
+    if (filter === "debtors") return athletes.filter(a => a.status === "inactive")
+    if (filter === "expiring") return athletes.filter(a => a.status === "active")
+    return athletes
+  }, [filter, athletes])
 
   return (
     <ActionTableRoot>

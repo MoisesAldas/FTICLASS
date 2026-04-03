@@ -1,4 +1,5 @@
 import { Inter, Geist_Mono } from "next/font/google"
+import { ClerkProvider } from "@clerk/nextjs"
 
 import "@workspace/ui/globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -22,19 +23,21 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={cn("antialiased", fontMono.variable, inter.variable)}
-    >
-      <body suppressHydrationWarning>
-        <ThemeProvider forcedTheme="dark">
-          <TooltipProvider delayDuration={0}>
-            {children}
-            <Toaster />
-          </TooltipProvider>
-        </ThemeProvider>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html
+        lang="es"
+        suppressHydrationWarning
+        className={cn("antialiased", fontMono.variable, inter.variable)}
+      >
+        <body suppressHydrationWarning>
+          <ThemeProvider forcedTheme="dark">
+            <TooltipProvider delayDuration={0}>
+              {children}
+              <Toaster />
+            </TooltipProvider>
+          </ThemeProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   )
 }

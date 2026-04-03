@@ -56,7 +56,7 @@ export function SelectPrimitive({
           <ChevronDown className="size-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-(--radix-popover-trigger-width) p-1 bg-zinc-950 border-white/10 rounded-[20px] shadow-2xl z-50 max-h-[280px] overflow-y-auto">
+      <PopoverContent className="w-(--radix-popover-trigger-width) p-1 bg-zinc-950 border-white/10 rounded-[20px] shadow-2xl z-50 max-h-[280px] overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
         <div className="flex flex-col gap-0.5">
           {options.map((option) => (
             <button

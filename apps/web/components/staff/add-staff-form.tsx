@@ -29,6 +29,8 @@ const staffSchema = z.object({
   especialidad: z.string().min(1, "Especifique un área principal"),
 })
 
+import { createCoachAction } from "@/app/(dashboard)/dashboard/staff/actions"
+
 type StaffFormValues = z.infer<typeof staffSchema>
 
 interface AddStaffFormProps {
@@ -60,12 +62,27 @@ export function AddStaffForm({ onSuccess, onCancel }: AddStaffFormProps) {
 
   async function onSubmit(data: StaffFormValues) {
     setIsSubmitting(true)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setIsSubmitting(false)
-    toast.success("Coach registrado", {
-      description: `El perfil de ${data.nombre} ha sido añadido al Staff exitosamente.`,
-    })
-    onSuccess?.()
+    
+    try {
+      const result = await createCoachAction(data)
+      
+      if (result.success) {
+        toast.success("Coach Registrado", {
+          description: `El perfil de ${data.nombre} ya está activo en tu equipo.`,
+        })
+        onSuccess?.()
+      } else {
+        toast.error("Error al invitar", {
+          description: result.error || "No se pudo enviar la invitación.",
+        })
+      }
+    } catch (err) {
+      toast.error("Error crítico", {
+        description: "Hubo un problema al procesar la solicitud.",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const ROLES_OPTIONS = [

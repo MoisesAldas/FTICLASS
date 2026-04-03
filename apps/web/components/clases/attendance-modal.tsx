@@ -6,184 +6,265 @@ import {
   Users, 
   Search, 
   CheckCircle2, 
-  XCircle, 
   Plus, 
   Clock, 
   UserPlus2,
-  Trash2
+  Trash2,
+  Loader2,
+  X
 } from "lucide-react"
 
 import { ModalPrimitive } from "@/components/shared/modal-primitive"
-import { ActionButton } from "@/components/shared/action-button"
 import { Input } from "@workspace/ui/components/input"
 import { Button } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
-
-interface Attendee {
-  id: string
-  name: string
-  status: "reserved" | "present"
-  avatar?: string
-}
+import { useSupabase } from "@/hooks/use-supabase"
+import { toast } from "sonner"
 
 interface AttendanceModalProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
+  onSuccess?: () => void
   classData: {
     id: string
     name: string
     hour: string
     coach: string
     capacity: number
+    enrolled: number
   }
 }
 
-const MOCK_ATTENDEES: Attendee[] = [
-  { id: "1", name: "Carlos Ruiz", status: "reserved", avatar: "https://i.pravatar.cc/150?u=1" },
-  { id: "2", name: "María Garcia", status: "present", avatar: "https://i.pravatar.cc/150?u=2" },
-  { id: "3", name: "Roberto Soto", status: "reserved", avatar: "https://i.pravatar.cc/150?u=3" },
-  { id: "4", name: "Ana Belén", status: "present", avatar: "https://i.pravatar.cc/150?u=4" },
-]
-
-export function AttendanceModal({ isOpen, onOpenChange, classData }: AttendanceModalProps) {
-  const [attendees, setAttendees] = React.useState<Attendee[]>(MOCK_ATTENDEES)
+export function AttendanceModal({ isOpen, onOpenChange, classData, onSuccess }: AttendanceModalProps) {
+  const { client, gymId } = useSupabase()
+  const [attendees, setAttendees] = React.useState<any[]>([])
   const [search, setSearch] = React.useState("")
+  const [loading, setLoading] = React.useState(false)
+  const [isSubmitting, setIsSubmitting] = React.useState<string | null>(null)
+  const [searchResults, setSearchResults] = React.useState<any[]>([])
 
-  const toggleCheckIn = (id: string) => {
-    setAttendees(prev => prev.map(a => 
-      a.id === id ? { ...a, status: a.status === "present" ? "reserved" : "present" } : a
-    ))
+  const fetchAttendees = React.useCallback(async () => {
+    if (!client || !classData.id) return
+    setLoading(true)
+    try {
+      const { data, error } = await client
+        .from('class_enrollments')
+        .select(`
+          *,
+          athlete:athletes(
+            id,
+            profile:profiles(full_name, avatar_url)
+          )
+        `)
+        .eq('class_session_id', classData.id)
+        .order('enrolled_at', { ascending: true })
+
+      if (error) throw error
+      setAttendees(data || [])
+    } catch (err) {
+      console.error("Error fetching attendees:", err)
+    } finally {
+      setLoading(false)
+    }
+  }, [client, classData.id])
+
+  React.useEffect(() => {
+    if (isOpen) {
+      fetchAttendees()
+    }
+  }, [isOpen, fetchAttendees])
+
+  // Simple athlete search
+  React.useEffect(() => {
+    const searchAthletes = async () => {
+      if (!client || !gymId || search.length < 3) {
+        setSearchResults([])
+        return
+      }
+      
+      const { data, error: searchError } = await client
+        .from('athletes')
+        .select(`
+          id,
+          profile:profiles!inner(full_name)
+        `)
+        .eq('gym_id', gymId)
+        .ilike('profile.full_name', `%${search}%`)
+        .limit(5)
+      
+      if (searchError) {
+        console.error("Search error:", searchError)
+        return
+      }
+      
+      setSearchResults(data || [])
+    }
+    const timer = setTimeout(searchAthletes, 300)
+    return () => clearTimeout(timer)
+  }, [client, gymId, search])
+
+  const toggleCheckIn = async (enrollment: any) => {
+    if (!client) return
+    const newStatus = enrollment.status === "attended" ? "confirmed" : "attended"
+    setIsSubmitting(enrollment.id)
+    
+    try {
+      const { error } = await client
+        .from('class_enrollments')
+        .update({ status: newStatus })
+        .eq('id', enrollment.id)
+
+      if (error) throw error
+      fetchAttendees()
+      onSuccess?.()
+    } catch (err) {
+      toast.error("Error al actualizar estado")
+    } finally {
+      setIsSubmitting(null)
+    }
   }
 
-  const removeAttendee = (id: string) => {
-    setAttendees(prev => prev.filter(a => a.id !== id))
+  const removeAttendee = async (id: string) => {
+    if (!client) return
+    if (!confirm("¿Eliminar reserva?")) return
+
+    try {
+      const { error } = await client
+        .from('class_enrollments')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+      fetchAttendees()
+      onSuccess?.()
+    } catch (err) {
+      toast.error("Error al eliminar reserva")
+    }
   }
 
-  const presentCount = attendees.filter(a => a.status === "present").length
-  const filteredAttendees = attendees.filter(a => 
-    a.name.toLowerCase().includes(search.toLowerCase())
-  )
+  const addAthlete = async (athleteId: string) => {
+    if (!client || !gymId) return
+    if (attendees.some(a => a.athlete_id === athleteId)) {
+        toast.error("El atleta ya está inscrito")
+        return
+    }
+
+    try {
+      const { error } = await client
+        .from('class_enrollments')
+        .insert([{
+          class_session_id: classData.id,
+          gym_id: gymId,
+          athlete_id: athleteId,
+          status: 'confirmed'
+        }])
+
+      if (error) throw error
+      setSearch("")
+      setSearchResults([])
+      fetchAttendees()
+      onSuccess?.()
+      toast.success("Atleta inscrito")
+    } catch (err) {
+      toast.error("Error al inscribir")
+    }
+  }
+
+  const presentCount = attendees.filter(a => a.status === "attended").length
 
   return (
     <ModalPrimitive 
       open={isOpen} 
       onOpenChange={onOpenChange}
-      trigger={<div />} // Managed externally
-      title="Gestión de Asistencia"
-      description={`Control de entrada para la clase de ${classData.name} - ${classData.hour}. Coach: ${classData.coach}`}
+      trigger={<div />}
+      title="Asistencia"
+      description={`${classData.name} - ${classData.hour}`}
       icon={Users}
-      maxWidth="sm:max-w-[700px]"
+      maxWidth="sm:max-w-[600px]"
     >
-      <div className="space-y-6">
-        {/* Statistics and Quick Add */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
-           {/* Stats card */}
-           <div className="bg-[#131315]/80 p-5 rounded-[24px] border border-white/5 flex items-center justify-between shadow-inner h-full">
-              <div className="space-y-1">
-                 <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Ocupación Real</p>
-                 <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-black text-white">{attendees.length}</span>
-                    <span className="text-zinc-500 font-bold text-sm">/ {classData.capacity}</span>
-                 </div>
-              </div>
-              <div className="text-right">
-                 <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Asistieron</p>
-                 <p className="text-2xl font-black text-emerald-500">{presentCount}</p>
-              </div>
+      <div className="space-y-5">
+        <div className="flex items-center justify-between p-5 bg-zinc-900/40 border border-white/5 rounded-2xl">
+           <div className="space-y-1">
+              <p className="text-[10px] font-bold text-zinc-500 uppercase">Inscritos</p>
+              <p className="text-2xl font-bold text-white">{attendees.length} / {classData.capacity}</p>
            </div>
-
-           {/* Search / Add Walk-in */}
-           <div className="relative group h-full">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-zinc-500 pointer-events-none group-focus-within:text-indigo-500 transition-colors" />
-              <Input 
-                placeholder="Buscar o añadir atleta..."
-                className="h-full min-h-[74px] bg-[#131315]/80 border-white/5 rounded-[24px] pl-12 pr-6 text-base font-medium placeholder:text-zinc-600 focus-visible:ring-indigo-500/30"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              {search.length > 2 && (
-                 <motion.button 
-                   initial={{ opacity: 0, scale: 0.9 }}
-                   animate={{ opacity: 1, scale: 1 }}
-                   className="absolute right-4 top-1/2 -translate-y-1/2 h-10 px-4 bg-indigo-500 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-lg shadow-indigo-500/20 active:scale-95 transition-all"
-                 >
-                    <Plus className="inline-block mr-1 size-3.5" /> Nuevo
-                 </motion.button>
-              )}
+           <div className="text-right space-y-1">
+              <p className="text-[10px] font-bold text-emerald-500 uppercase">Presentes</p>
+              <p className="text-2xl font-bold text-emerald-500">{presentCount}</p>
            </div>
         </div>
 
-        {/* Attendees List */}
-        <div className="space-y-3">
-           <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 px-1 mb-2">Lista de Atletas</h3>
-           
-           <div className="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-              <AnimatePresence mode="popLayout" initial={false}>
-                 {filteredAttendees.length > 0 ? (
-                    filteredAttendees.map((attendee, index) => (
-                       <motion.div
-                          key={attendee.id}
-                          layout
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.95 }}
-                          transition={{ delay: index * 0.05 }}
-                          className={cn(
-                             "flex items-center justify-between p-4 rounded-[22px] border transition-all mb-2",
-                             attendee.status === "present" 
-                                ? "bg-emerald-500/5 border-emerald-500/20" 
-                                : "bg-white/2 border-white/5 hover:bg-white/4"
-                          )}
-                       >
-                          <div className="flex items-center gap-3">
-                             <div className="size-11 rounded-2xl overflow-hidden bg-zinc-800 border-2 border-white/5 shrink-0 shadow-lg">
-                                <img src={attendee.avatar} alt={attendee.name} className="size-full object-cover" />
-                             </div>
-                             <div className="space-y-0.5">
-                                <p className="text-base font-bold text-white tracking-tight">{attendee.name}</p>
-                                <div className="flex items-center gap-2">
-                                   {attendee.status === "present" ? (
-                                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/10 text-[9px] font-black uppercase tracking-wider text-emerald-400">
-                                         <CheckCircle2 className="size-2.5" /> Presente
-                                      </span>
-                                   ) : (
-                                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-zinc-500/10 text-[9px] font-black uppercase tracking-wider text-zinc-500">
-                                         <Clock className="size-2.5" /> Reservado
-                                      </span>
-                                   )}
-                                </div>
-                             </div>
-                          </div>
+        <div className="relative">
+           <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-zinc-500" />
+           <Input 
+             placeholder="Buscar atleta para inscribir..."
+             className="bg-zinc-900 border-white/5 rounded-2xl pl-10 h-10 text-sm"
+             value={search}
+             onChange={(e) => setSearch(e.target.value)}
+           />
+           {searchResults.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-zinc-900 border border-white/10 rounded-xl p-1 z-50 shadow-xl">
+                 {searchResults.map(result => (
+                    <button 
+                      key={result.id}
+                      onClick={() => addAthlete(result.id)}
+                      className="w-full flex items-center gap-2 p-2 hover:bg-white/5 rounded-lg text-sm font-medium text-zinc-400 hover:text-white"
+                    >
+                       <Plus className="size-3" /> {result.profile?.full_name}
+                    </button>
+                 ))}
+              </div>
+           )}
+        </div>
 
-                          <div className="flex items-center gap-2">
-                             <Button 
-                               onClick={() => toggleCheckIn(attendee.id)}
-                               className={cn(
-                                  "h-10 px-5 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
-                                  attendee.status === "present" 
-                                     ? "bg-zinc-800 text-zinc-400 hover:bg-zinc-700" 
-                                     : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 hover:bg-emerald-500/20 active:scale-95 shadow-none"
-                               )}
-                             >
-                                {attendee.status === "present" ? "Desmarcar" : "Check-in"}
-                             </Button>
-                             <Button 
-                                variant="ghost" 
-                                onClick={() => removeAttendee(attendee.id)}
-                                className="size-10 rounded-xl text-zinc-600 hover:text-rose-500 hover:bg-rose-500/10 transition-colors"
-                             >
-                                <Trash2 className="size-4" />
-                             </Button>
+        <div className="space-y-2">
+           <h3 className="text-[10px] font-bold uppercase text-zinc-500 px-1">Lista de Clase</h3>
+           <div className="max-h-[300px] overflow-y-auto space-y-2 pr-1">
+              <AnimatePresence mode="popLayout">
+                 {attendees.map((item) => (
+                    <motion.div
+                       key={item.id}
+                       layout
+                       className={cn(
+                          "flex items-center justify-between p-3 rounded-2xl border transition-all",
+                          item.status === "attended" 
+                             ? "bg-emerald-500/5 border-emerald-500/20" 
+                             : "bg-zinc-900/20 border-white/5"
+                       )}
+                    >
+                       <div className="flex items-center gap-3">
+                          <div className="size-9 rounded-xl overflow-hidden bg-zinc-800 border border-white/5">
+                             <img src={item.athlete?.profile?.avatar_url || `https://avatar.vercel.sh/${item.id}`} className="size-full object-cover" />
                           </div>
-                       </motion.div>
-                    ))
-                 ) : (
-                    <div className="flex flex-col items-center justify-center py-12 text-center bg-white/1 rounded-[32px] border border-dashed border-white/5 mt-4">
-                       <UserPlus2 className="size-12 text-zinc-700 mb-4" />
-                       <p className="text-zinc-500 font-bold mb-1">Sin atletas encontrados</p>
-                       <p className="text-zinc-600 text-[11px] font-medium max-w-[200px]">Utiliza el buscador para añadir atletas a esta clase.</p>
-                    </div>
-                 )}
+                          <div>
+                             <p className="text-sm font-bold text-white">{item.athlete?.profile?.full_name}</p>
+                             <p className="text-[10px] text-zinc-500 uppercase">{item.status === "attended" ? "Asistió" : "Confirmado"}</p>
+                          </div>
+                       </div>
+
+                       <div className="flex items-center gap-2">
+                          <Button 
+                            onClick={() => toggleCheckIn(item)}
+                            disabled={isSubmitting === item.id}
+                            className={cn(
+                               "h-8 px-4 rounded-xl text-[10px] font-bold uppercase transition-all",
+                               item.status === "attended" 
+                                  ? "bg-zinc-800 text-zinc-400 hover:text-white" 
+                                  : "bg-white text-zinc-950 hover:bg-zinc-200"
+                            )}
+                          >
+                             {isSubmitting === item.id ? "..." : item.status === "attended" ? "Anular" : "Check-in"}
+                          </Button>
+                          <Button 
+                             variant="ghost" 
+                             onClick={() => removeAttendee(item.id)}
+                             className="size-8 rounded-xl text-zinc-600 hover:text-red-500"
+                          >
+                             <Trash2 className="size-4" />
+                          </Button>
+                       </div>
+                    </motion.div>
+                 ))}
               </AnimatePresence>
            </div>
         </div>

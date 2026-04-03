@@ -1,0 +1,12 @@
+project_id = "ljxlritlazwcxpnxbbcg"
+
+[api]
+port = 54321
+external_url = "http://localhost:54321"
+
+[db]
+port = 54322
+shadow_port = 54320
+
+[dashboard]
+port = 54323

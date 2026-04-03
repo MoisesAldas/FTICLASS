@@ -12,7 +12,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.0.8",
     "@hookform/resolvers": "^5.2.2",
+    "@supabase/supabase-js": "^2.101.1",
     "@workspace/ui": "workspace:*",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.38.0",

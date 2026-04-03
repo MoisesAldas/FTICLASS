@@ -7,8 +7,13 @@ import { ModalPrimitive } from "../shared/modal-primitive"
 import { ActionButton } from "../shared/action-button"
 import { AddClassForm } from "./add-class-form"
 
-export function AddClassModal() {
+export function AddClassModal({ onSuccess }: { onSuccess?: () => void }) {
   const [open, setOpen] = React.useState(false)
+
+  const handleSuccess = () => {
+    setOpen(false)
+    onSuccess?.()
+  }
 
   return (
     <ModalPrimitive 
@@ -20,7 +25,9 @@ export function AddClassModal() {
     
       maxWidth="sm:max-w-[720px]"
     >
-      <AddClassForm onSuccess={() => setOpen(false)} onCancel={() => setOpen(false)} />
+      <div className="max-h-[70vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
+        <AddClassForm onSuccess={handleSuccess} onCancel={() => setOpen(false)} />
+      </div>
     </ModalPrimitive>
   )
 }

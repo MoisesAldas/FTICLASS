@@ -54,9 +54,11 @@ export default function Page() {
           <Link href="/login" className="text-white font-bold text-sm md:text-base hover:text-[#c2c1ff] transition-colors">
             Login
           </Link>
-          <Button className="font-black" variant="fitclass-nav" size="fitclass-nav">
-            ACCESO ELITE
-          </Button>
+          <Link href="/registro">
+            <Button className="font-black" variant="fitclass-nav" size="fitclass-nav">
+              ACCESO ELITE
+            </Button>
+          </Link>
         </div>
       </nav>
 
@@ -95,9 +97,11 @@ export default function Page() {
               Gestiona tu box con la precisión de un atleta de élite. Sin fricciones, sin límites.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <Button variant="fitclass-primary" size="fitclass-hero" className="font-black w-full rounded-full sm:w-[280px]">
-                EMPEZAR AHORA
-              </Button>
+              <Link href="/registro" className="w-full sm:w-[280px]">
+                <Button variant="fitclass-primary" size="fitclass-hero" className="font-black w-full rounded-full">
+                  EMPEZAR AHORA
+                </Button>
+              </Link>
               <Button variant="fitclass-secondary" size="fitclass-hero" className="font-black w-full rounded-full sm:w-[280px]">
                 VER INTERFAZ
               </Button>
@@ -369,9 +373,11 @@ export default function Page() {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="flex flex-col md:flex-row gap-6 justify-center items-center"
             >
-              <Button  className="rounded-full font-black" variant="fitclass-cta" size="fitclass-cta">
-                EMPEZAR PRUEBA GRATIS
-              </Button>
+              <Link href="/registro">
+                <Button className="rounded-full font-black" variant="fitclass-cta" size="fitclass-cta">
+                  EMPEZAR PRUEBA GRATIS
+                </Button>
+              </Link>
               <div className="flex flex-col items-start text-left text-white/80 font-bold">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="w-5 h-5 text-indigo-200" />

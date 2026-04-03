@@ -10,44 +10,12 @@ import { cn } from "@workspace/ui/lib/utils"
 import { ActionCard, ActionCardHeader, ActionCardContent, ActionCardFooter, ActionCardAvatar, ActionCardTags } from "@/components/shared/action-card"
 import { ModalPrimitive } from "@/components/shared/modal-primitive"
 
-const MOCK_WODS = [
-  { 
-    id: 1, 
-    titulo: "Murph", 
-    categoria: "Hero WOD", 
-    duracion: "Time Cap: 60 min", 
-    instrucciones: "1 Mile Run\n100 Pull-ups\n200 Push-ups\n300 Squats\n1 Mile Run",
-    destacado: true
-  },
-  { 
-    id: 2, 
-    titulo: "Fran", 
-    categoria: "Benchmark", 
-    duracion: "For Time", 
-    instrucciones: "21-15-9 Reps For Time:\n- Thrusters (95/65 lb)\n- Pull-ups",
-    destacado: false
-  },
-  { 
-    id: 3, 
-    titulo: "Fuerza Absoluta 5x5", 
-    categoria: "Strength", 
-    duracion: "40 min", 
-    instrucciones: "Back Squat 5x5 (80% 1RM)\nDescanso: 2 min entre series\n\nAccesorios:\nLeg Extension 3x12\nHamstring Curl 3x12",
-    destacado: false
-  },
-  { 
-    id: 4, 
-    titulo: "Engine Engine", 
-    categoria: "EMOM", 
-    duracion: "20 min", 
-    instrucciones: "EMOM 20 Minutes:\nMin 1: 15 Cal Row\nMin 2: 12 Burpees Over Rower\nMin 3: 40 Double Unders\nMin 4: Descanso",
-    destacado: false
-  },
-]
+import { useSupabase } from "@/hooks/use-supabase"
 
-function WodCard({ wod }: { wod: typeof MOCK_WODS[0] }) {
+function WodCard({ wod }: { wod: any }) {
   const [isModalOpen, setIsModalOpen] = React.useState(false)
 
+  // El diseño del WodCard se mantiene 100% igual, solo cambian las props
   return (
     <>
       <ModalPrimitive
@@ -147,6 +115,45 @@ function WodCard({ wod }: { wod: typeof MOCK_WODS[0] }) {
 }
 
 export default function WodsPage() {
+  const { client, ready, gymId } = useSupabase()
+  const [wods, setWods] = React.useState<any[]>([])
+  const [loading, setLoading] = React.useState(true)
+
+  const fetchWods = React.useCallback(async () => {
+    if (!client || !gymId) return
+
+    try {
+      setLoading(true)
+      const { data, error } = await client
+        .from('wods')
+        .select('*')
+        .eq('gym_id', gymId)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+
+      const mappedWods = (data || []).map(w => ({
+        id: w.id,
+        titulo: w.title,
+        categoria: w.category || w.type || "Workout",
+        duracion: w.duration || "Por tiempo",
+        instrucciones: w.description || "",
+        destacado: w.is_published
+      }))
+
+      setWods(mappedWods)
+    } catch (err) {
+      console.error("[WodsPage] Error fetching wods:", err)
+    } finally {
+      setLoading(false)
+    }
+  }, [client, gymId])
+
+  React.useEffect(() => {
+    if (ready) {
+      fetchWods()
+    }
+  }, [ready, fetchWods])
   return (
     <div className="flex flex-col gap-8">
       {/* Header */}
@@ -184,7 +191,12 @@ export default function WodsPage() {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-           {MOCK_WODS.map((wod) => (
+           {loading ? (
+             <div className="col-span-full py-20 text-center opacity-30 animate-pulse">
+                <Dumbbell className="size-10 mx-auto mb-4" />
+                <p className="text-[10px] font-black uppercase tracking-widest">Cargando Estrategias...</p>
+             </div>
+           ) : wods.map((wod) => (
              <WodCard key={wod.id} wod={wod} />
            ))}
         </div>

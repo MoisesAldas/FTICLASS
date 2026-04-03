@@ -16,9 +16,14 @@ import {
   AtSign, 
   Phone, 
   CreditCard,
-  AlertCircle
+  AlertCircle,
+  Copy,
+  KeyRound,
+  Mail
 } from "lucide-react"
 import { motion } from "framer-motion"
+import { createAthleteAction } from "./actions"
+import { toast } from "sonner"
 
 import { cn } from "@workspace/ui/lib/utils"
 import { Button } from "@workspace/ui/components/button"
@@ -50,7 +55,7 @@ import {
 const athleteSchema = z.object({
   firstName: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
   lastName: z.string().min(2, "El apellido debe tener al menos 2 caracteres"),
-  dni: z.string().min(5, "Ingrese una cédula o pasaporte válido"),
+  dni: z.string().regex(/^\d{10}$/, "La cédula debe tener exactamente 10 dígitos numéricos"),
   email: z.string().email("Correo electrónico no válido"),
   phone: z.string().min(7, "Ingrese un número de teléfono válido"),
   birthDate: z.date({
@@ -65,6 +70,7 @@ export default function NuevoAtletaPage() {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [isSuccess, setIsSuccess] = React.useState(false)
+  const [credentials, setCredentials] = React.useState<{email: string, password: string} | null>(null)
 
   const {
     register,
@@ -89,42 +95,136 @@ export default function NuevoAtletaPage() {
 
   async function onSubmit(data: AthleteFormValues) {
     setIsSubmitting(true)
-    // Simulación de guardado
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-    console.log("Athlete data:", data)
-    setIsSubmitting(false)
-    setIsSuccess(true)
+    const toastId = toast.loading("Registrando atleta en el sistema...")
+    console.log("[CLIENTE] 🟢 Datos del formulario capturados:", data)
     
-    // Redirigir después de 3 segundos
-    setTimeout(() => {
-      router.push("/dashboard")
-    }, 3000)
+    try {
+      // 1. IMPORTANTE: Serializamos la fecha a string para que Next.js pueda enviarla
+      const serializedData = {
+        ...data,
+        birthDate: data.birthDate instanceof Date 
+          ? data.birthDate.toISOString().split('T')[0] 
+          : data.birthDate
+      }
+      
+      console.log("[CLIENTE] 📡 Enviando datos al servidor...", serializedData)
+      const result = await createAthleteAction(serializedData)
+      console.log("[CLIENTE] 🏁 Respuesta del servidor recibida:", result)
+      
+      if (result.error) {
+        toast.dismiss(toastId)
+        if (typeof result.error === 'object') {
+          const firstError = Object.values(result.error)[0]
+          toast.error("Error de validación", { 
+            description: Array.isArray(firstError) ? firstError[0] : "Revisa los campos" 
+          })
+        } else {
+          toast.error("No se pudo registrar", { description: result.error })
+        }
+        setIsSubmitting(false)
+        return
+      }
+
+      if (result.success) {
+        toast.success("¡Atleta Registrado!", { id: toastId })
+        setCredentials(result.credentials)
+        setIsSuccess(true)
+      }
+    } catch (err: any) {
+      console.error("[CLIENTE] ❌ Error fatal en la comunicación:", err)
+      toast.error("Error de conexión", { 
+        id: toastId,
+        description: "Hubo un problema al contactar con el servidor." 
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
-  if (isSuccess) {
+  if (isSuccess && credentials) {
     return (
       <div className="flex flex-1 items-center justify-center p-4">
         <motion.div 
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="flex flex-col items-center gap-6 text-center"
+          className="flex flex-col items-center gap-8 text-center max-w-lg w-full bg-[#131315]/80 backdrop-blur-3xl p-10 rounded-[40px] border border-white/5 shadow-2x-strong"
         >
-          <div className="rounded-full bg-emerald-500/20 p-6 animate-pulse">
-            <CheckCircle2 className="size-16 text-emerald-500" strokeWidth={1.5} />
+          <div className="size-24 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+            <CheckCircle2 className="size-12 text-emerald-500" strokeWidth={1.5} />
           </div>
-          <div className="flex flex-col gap-2">
-            <h2 className="text-3xl font-bold tracking-tight text-white italic uppercase font-heading">¡Atleta Registrado!</h2>
-            <p className="text-muted-foreground text-lg max-w-md">
-              El perfil ha sido creado exitosamente. Redirigiendo al panel...
-            </p>
+
+          <div className="space-y-2">
+            <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter">¡Registro Exitoso!</h2>
+            <p className="text-zinc-400 font-medium">El atleta ya tiene acceso a la App Móvil de FITCLASS.</p>
           </div>
-          <Button 
-            onClick={() => router.push("/dashboard")}
-            variant="outline" 
-            className="mt-4 rounded-xl border-white/10 hover:bg-white/5"
-          >
-            Volver al Inicio
-          </Button>
+
+          <div className="w-full space-y-4 bg-zinc-900/50 p-6 rounded-3xl border border-white/5 text-left">
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-[#5e5ce6] mb-4">Credenciales de Acceso</h3>
+            
+            <div className="space-y-3">
+              <div className="flex items-center justify-between group bg-black/20 p-4 rounded-2xl border border-white/5">
+                <div className="flex items-center gap-3">
+                  <Mail className="size-4 text-zinc-500" />
+                  <div>
+                    <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">Usuario (Email)</p>
+                    <p className="text-sm font-bold text-white">{credentials.email}</p>
+                  </div>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="size-8 rounded-xl hover:bg-white/10"
+                  onClick={() => {
+                    navigator.clipboard.writeText(credentials.email)
+                    toast.success("Copiado al portapapeles")
+                  }}
+                >
+                  <Copy className="size-4 text-zinc-500" />
+                </Button>
+              </div>
+
+              <div className="flex items-center justify-between group bg-black/20 p-4 rounded-2xl border border-white/5">
+                <div className="flex items-center gap-3">
+                  <KeyRound className="size-4 text-zinc-400" />
+                  <div>
+                    <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">Contraseña (DNI)</p>
+                    <p className="text-sm font-bold text-white font-mono tracking-widest">{credentials.password}</p>
+                  </div>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="size-8 rounded-xl hover:bg-white/10"
+                  onClick={() => {
+                    navigator.clipboard.writeText(credentials.password)
+                    toast.success("Copiado al portapapeles")
+                  }}
+                >
+                  <Copy className="size-4 text-zinc-500" />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-3 w-full">
+            <Button 
+              onClick={() => {
+                setIsSuccess(false)
+                setCredentials(null)
+              }}
+              variant="outline" 
+              className="flex-1 rounded-2xl border-white/10 hover:bg-white/5 h-12 font-bold uppercase text-[11px] tracking-widest"
+            >
+              Registrar otro
+            </Button>
+            <Button 
+              onClick={() => router.push("/dashboard/atletas")}
+              variant="fitclass-primary"
+              className="flex-1 rounded-2xl h-12"
+            >
+              Continuar
+            </Button>
+          </div>
         </motion.div>
       </div>
     )
@@ -149,7 +249,7 @@ export default function NuevoAtletaPage() {
 
       <Card className="rounded-3xl border-white/5 bg-[#131315]/60 backdrop-blur-2xl overflow-hidden shadow-2xl">
         <form onSubmit={handleSubmit(onSubmit)}>
-          <CardHeader className="border-b border-white/5 bg-white/[0.02] p-8">
+          <CardHeader className="border-b border-white/5 bg-white/2 p-8">
             <div className="flex items-center gap-4">
               <div className="rounded-2xl bg-indigo-500/10 p-3">
                 <UserPlus className="size-6 text-indigo-400" data-icon="inline-start" />
@@ -293,7 +393,7 @@ export default function NuevoAtletaPage() {
             </FieldGroup>
           </CardContent>
 
-          <CardFooter className="bg-white/[0.02] p-8 border-t border-white/5 flex flex-col md:flex-row gap-4 items-center justify-between">
+          <CardFooter className="bg-white/2 p-8 border-t border-white/5 flex flex-col md:flex-row gap-4 items-center justify-between">
             <p className="text-[10px] text-indigo-200/40 italic font-black uppercase tracking-widest">
               * Todos los campos son obligatorios para el registro inicial.
             </p>

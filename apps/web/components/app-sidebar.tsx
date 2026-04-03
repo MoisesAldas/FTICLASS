@@ -45,6 +45,8 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@workspace/ui/lib/utils"
 
+import { useClerk } from "@clerk/nextjs"
+
 type NavItem = {
   title: string
   icon: React.ComponentType<{ className?: string }>
@@ -80,7 +82,7 @@ const menuGroups: { menu: NavItem[]; general: NavItem[] } = {
   ],
   general: [
     { title: "Ajustes", icon: Settings, url: "/dashboard/ajustes" },
-    { title: "Cerrar sesión", icon: LogOut, url: "/" },
+    { title: "Cerrar sesión", icon: LogOut, url: "#" },
   ],
 }
 
@@ -91,9 +93,14 @@ function NavMenuList({
   items: NavItem[]
   pathname: string
 }) {
+  const { signOut } = useClerk()
+
   return (
     <SidebarMenu className="gap-px">
       {items.map((item) => {
+        // Handle Logout specially
+        const isLogout = item.title === "Cerrar sesión"
+
         // If the item has children (Nested Sub-menu)
         if (item.items && item.items.length > 0) {
           const isActiveGroup = item.items.some(
@@ -167,49 +174,69 @@ function NavMenuList({
         // Standard Flat Item
         const active =
           pathname === item.url || (item.url !== "/" && pathname.startsWith(item.url as string + "/"))
+        
         return (
           <SidebarMenuItem key={item.title}>
             <SidebarMenuButton
               asChild
               isActive={active}
               tooltip={item.title}
+              onClick={isLogout ? () => signOut({ redirectUrl: '/' }) : undefined}
               className={cn(
                 "h-9 rounded-md px-2.5 transition-[background-color,color] duration-150",
                 "outline-none focus-visible:ring-2 focus-visible:ring-[#5e5ce6]/35 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0c]",
                 "data-[active=true]:bg-zinc-800 data-[active=true]:text-white data-[active=true]:font-medium",
-                "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200"
+                "text-zinc-400 hover:bg-white/4 hover:text-zinc-200",
+                isLogout && "hover:text-red-400 hover:bg-red-500/10"
               )}
             >
-              <Link
-                href={item.url as string}
-                aria-current={active ? "page" : undefined}
-                className="flex w-full min-w-0 items-center gap-2.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0"
-              >
-                <item.icon
-                  className={cn(
-                    "size-[17px] shrink-0 transition-colors",
-                    active
-                      ? "text-[#c2c1ff]"
-                      : "text-zinc-500 group-hover:text-zinc-300"
-                  )}
-                  aria-hidden
-                />
-                <span className="min-w-0 flex-1 truncate text-left text-[13px] font-medium leading-none group-data-[collapsible=icon]:hidden">
-                  {item.title}
-                </span>
-                {item.badge ? (
-                  <span
+              {isLogout ? (
+                <button
+                  type="button"
+                  className="flex w-full min-w-0 items-center gap-2.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0"
+                >
+                  <item.icon
                     className={cn(
-                      "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold tabular-nums group-data-[collapsible=icon]:hidden",
-                      active
-                        ? "bg-[#5e5ce6]/25 text-white"
-                        : "bg-[#5e5ce6]/15 text-[#c2c1ff]"
+                      "size-[17px] shrink-0 transition-colors text-zinc-500 group-hover:text-red-400"
                     )}
-                  >
-                    {item.badge}
+                    aria-hidden
+                  />
+                  <span className="min-w-0 flex-1 truncate text-left text-[13px] font-medium leading-none group-data-[collapsible=icon]:hidden">
+                    {item.title}
                   </span>
-                ) : null}
-              </Link>
+                </button>
+              ) : (
+                <Link
+                  href={item.url as string}
+                  aria-current={active ? "page" : undefined}
+                  className="flex w-full min-w-0 items-center gap-2.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0"
+                >
+                  <item.icon
+                    className={cn(
+                      "size-[17px] shrink-0 transition-colors",
+                      active
+                        ? "text-[#c2c1ff]"
+                        : "text-zinc-500 group-hover:text-zinc-300"
+                    )}
+                    aria-hidden
+                  />
+                  <span className="min-w-0 flex-1 truncate text-left text-[13px] font-medium leading-none group-data-[collapsible=icon]:hidden">
+                    {item.title}
+                  </span>
+                  {item.badge ? (
+                    <span
+                      className={cn(
+                        "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold tabular-nums group-data-[collapsible=icon]:hidden",
+                        active
+                          ? "bg-[#5e5ce6]/25 text-white"
+                          : "bg-[#5e5ce6]/15 text-[#c2c1ff]"
+                      )}
+                    >
+                      {item.badge}
+                    </span>
+                  ) : null}
+                </Link>
+              )}
             </SidebarMenuButton>
           </SidebarMenuItem>
         )

@@ -25,44 +25,8 @@ import { Badge } from "@workspace/ui/components/badge"
 import { ActionCard, ActionCardHeader, ActionCardContent, ActionCardFooter, ActionCardAvatar, ActionCardTags } from "@/components/shared/action-card"
 import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar"
 import { useSearchParams, useRouter } from "next/navigation"
-
-// --- MOCK DATA ---
-
-const MOCK_WOD = {
-  title: "Misión del Lunes: 'Turbo Ghost'",
-  type: "AMRAP 15 MINUTES",
-  parts: [
-    { title: "Buy-In", content: "800m Run" },
-    { title: "The Work", content: "15 Thrusters (95/65lb)\n12 Pull-ups\n9 Burpees over Bar" }
-  ],
-  focus: ["Hombros", "Capacidad Aeróbica"],
-  date: "Lunes, 30 de Marzo 2026"
-}
-
-const LEADERBOARD_RESULTS = [
-  { id: "1", athlete: "Ana Belén", result: "8 Rounds + 2", type: "RX", class: "07:00 AM", gender: "female", avatar: "https://i.pravatar.cc/150?u=4", note: "¡Mejor marca personal!" },
-  { id: "2", athlete: "Carlos Ruiz", result: "7 Rounds + 4", type: "RX", class: "06:00 AM", gender: "male", avatar: "https://i.pravatar.cc/150?u=1", note: "Fue brutal." },
-  { id: "3", athlete: "Silvia Luna", result: "6 Rounds + 10", type: "RX", class: "08:00 AM", gender: "female", avatar: "https://i.pravatar.cc/150?u=5", note: "Los thrusters me mataron." },
-  { id: "4", athlete: "María Garcia", result: "6 Rounds", type: "RX", class: "06:00 AM", gender: "female", avatar: "https://i.pravatar.cc/150?u=2", note: "" },
-  { id: "5", athlete: "Roberto Soto", result: "245 Reps", type: "Scaled", class: "07:00 AM", gender: "male", avatar: "https://i.pravatar.cc/150?u=3", note: "" },
-  { id: "6", athlete: "David Vega", result: "230 Reps", type: "Scaled", class: "09:00 AM", gender: "male", avatar: "https://i.pravatar.cc/150?u=10", note: "" },
-  { id: "7", athlete: "Laura M.", result: "5 Rounds", type: "RX", class: "10:00 AM", gender: "female", avatar: "https://i.pravatar.cc/150?u=11", note: "" },
-  { id: "8", athlete: "Jorge P.", result: "210 Reps", type: "Scaled", class: "06:00 AM", gender: "male", avatar: "https://i.pravatar.cc/150?u=12", note: "" },
-  { id: "9", athlete: "Lucia Diaz", result: "5 Rounds + 2", type: "RX", class: "07:00 AM", gender: "female", avatar: "https://i.pravatar.cc/150?u=13", note: "" },
-  { id: "10", athlete: "Marcos G.", result: "195 Reps", type: "Scaled", class: "08:00 AM", gender: "male", avatar: "https://i.pravatar.cc/150?u=14", note: "" },
-  { id: "11", athlete: "Elena Sol", result: "5 Rounds", type: "RX", class: "09:00 AM", gender: "female", avatar: "https://i.pravatar.cc/150?u=15", note: "" },
-  { id: "12", athlete: "Raul K.", result: "180 Reps", type: "Scaled", class: "10:00 AM", gender: "male", avatar: "https://i.pravatar.cc/150?u=16", note: "" },
-  { id: "13", athlete: "Sonia V.", result: "4 Rounds + 15", type: "RX", class: "11:00 AM", gender: "female", avatar: "https://i.pravatar.cc/150?u=17", note: "" },
-  { id: "14", athlete: "Ivan T.", result: "170 Reps", type: "Scaled", class: "06:00 AM", gender: "male", avatar: "https://i.pravatar.cc/150?u=18", note: "" },
-  { id: "15", athlete: "Paula Z.", result: "4 Rounds + 5", type: "RX", class: "07:00 AM", gender: "female", avatar: "https://i.pravatar.cc/150?u=19", note: "" },
-  { id: "16", athlete: "Mikel R.", result: "165 Reps", type: "Scaled", class: "08:00 AM", gender: "male", avatar: "https://i.pravatar.cc/150?u=20", note: "" },
-  { id: "17", athlete: "Clara S.", result: "4 Rounds", type: "RX", class: "09:00 AM", gender: "female", avatar: "https://i.pravatar.cc/150?u=21", note: "" },
-  { id: "18", athlete: "Toni F.", result: "150 Reps", type: "Scaled", class: "10:00 AM", gender: "male", avatar: "https://i.pravatar.cc/150?u=22", note: "" },
-  { id: "19", athlete: "Beatriz L.", result: "3 Rounds + 20", type: "RX", class: "11:00 AM", gender: "female", avatar: "https://i.pravatar.cc/150?u=23", note: "" },
-  { id: "20", athlete: "Nico J.", result: "140 Reps", type: "Scaled", class: "06:00 AM", gender: "male", avatar: "https://i.pravatar.cc/150?u=24", note: "" },
-  { id: "21", athlete: "Sara Q.", result: "3 Rounds", type: "RX", class: "07:00 AM", gender: "female", avatar: "https://i.pravatar.cc/150?u=25", note: "" },
-  { id: "22", athlete: "Alex B.", result: "130 Reps", type: "Scaled", class: "08:00 AM", gender: "male", avatar: "https://i.pravatar.cc/150?u=26", note: "" },
-]
+import { useSupabase } from "@/hooks/use-supabase"
+import { AddWodModal } from "@/components/wods/add-wod-modal"
 
 // --- SUB-COMPONENTS ---
 
@@ -113,11 +77,11 @@ function PodiumCard({ result, position }: { result: any, position: number }) {
   )
 }
 
-function RankingList({ results, title, type }: { results: any[], title: string, type: "RX" | "Scaled" }) {
+function RankingList({ results, title, type }: { results: any[], title: string, type: "RX" | "Scaled" | string }) {
   const scrollRef = React.useRef<HTMLDivElement>(null)
   
   // Triple the results for seamless infinite looping
-  const loopResults = React.useMemo(() => [...results, ...results, ...results], [results])
+  const loopResults = React.useMemo(() => results.length > 0 ? [...results, ...results, ...results] : [], [results])
 
   React.useEffect(() => {
     const el = scrollRef.current
@@ -129,18 +93,9 @@ function RankingList({ results, title, type }: { results: any[], title: string, 
     const animate = () => {
       if (!scrollRef.current) return
       const container = scrollRef.current
-      
-      // Calculate height of a single set of results
       const singleSetHeight = container.scrollHeight / 3
-
       scrollAmount += step
-      
-      // Seamless reset: when we reach the height of one full set, 
-      // jump back to 0. Since the content is identical, it's invisible.
-      if (scrollAmount >= singleSetHeight) {
-        scrollAmount = 0
-      }
-
+      if (scrollAmount >= singleSetHeight) scrollAmount = 0
       container.scrollTo({ top: scrollAmount, behavior: "auto" })
       requestAnimationFrame(animate)
     }
@@ -170,7 +125,6 @@ function RankingList({ results, title, type }: { results: any[], title: string, 
         className="flex-1 space-y-3 overflow-y-auto scrollbar-none pr-2 pb-10"
       >
         {loopResults.map((res, idx) => {
-          // Podium highlight logic should repeat every 'results.length' items
           const absoluteIdx = idx % results.length
           const isPodium = absoluteIdx < 3
           const colors = {
@@ -222,30 +176,27 @@ function RankingList({ results, title, type }: { results: any[], title: string, 
   )
 }
 
-function TvModeLayout({ results }: { results: any[] }) {
+function TvModeLayout({ results, wod }: { results: any[], wod: any }) {
   const rxResults = results.filter(r => r.type === "RX")
   const scaledResults = results.filter(r => r.type === "Scaled")
   
   return (
     <div className="fixed inset-0 bg-[#0a0a0c] p-8 lg:p-12 flex flex-col gap-8 lg:gap-12 overflow-hidden scrollbar-none">
-      {/* Top Bar */}
       <header className="flex items-center justify-between shrink-0">
         <div className="flex flex-col">
           <h1 className="text-4xl lg:text-6xl font-black text-white italic tracking-tighter uppercase mb-2">Pizarra <span className="text-[#5e5ce6]">FITCLASS</span></h1>
           <div className="flex items-center gap-4">
              <Badge className="bg-amber-500 text-black font-black px-4 py-1.5 rounded-full text-xs uppercase italic">Resultados del Día</Badge>
-             <span className="text-zinc-500 font-bold uppercase tracking-widest text-[10px]">{MOCK_WOD.date}</span>
+             <span className="text-zinc-500 font-bold uppercase tracking-widest text-[10px]">{wod.date}</span>
           </div>
         </div>
         <div className="text-right">
           <p className="text-zinc-600 font-black uppercase tracking-widest text-[10px] mb-1">Entrenamiento</p>
-          <h2 className="text-2xl lg:text-3xl font-black text-white italic uppercase tracking-tighter">{MOCK_WOD.title}</h2>
+          <h2 className="text-2xl lg:text-3xl font-black text-white italic uppercase tracking-tighter">{wod.title}</h2>
         </div>
       </header>
 
-      {/* Main Grid */}
       <div className="grid grid-cols-12 gap-8 lg:gap-12 flex-1 min-h-0">
-        {/* WOD Details */}
         <div className="col-span-12 lg:col-span-3 flex flex-col min-h-0">
            <ActionCard className="h-full bg-linear-to-br from-indigo-950/20 to-zinc-950 border-white/5 flex flex-col p-8 rounded-[40px] overflow-hidden">
               <div className="flex items-center gap-3 mb-6 shrink-0">
@@ -256,7 +207,7 @@ function TvModeLayout({ results }: { results: any[] }) {
               </div>
               
               <div className="flex-1 space-y-8 overflow-y-auto scrollbar-none pr-2">
-                {MOCK_WOD.parts.map(part => (
+                {wod.parts.map((part: any) => (
                   <div key={part.title} className="space-y-3">
                      <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-[#5e5ce6]">{part.title}</h4>
                      <p className="text-xl lg:text-2xl font-bold text-zinc-300 leading-relaxed font-sans whitespace-pre-wrap">{part.content}</p>
@@ -266,26 +217,23 @@ function TvModeLayout({ results }: { results: any[] }) {
 
               <div className="mt-8 pt-8 border-t border-white/5 space-y-4 shrink-0">
                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase text-zinc-600">Time Cap</span>
-                    <span className="text-xl font-black text-white italic">15m</span>
+                    <span className="text-[10px] font-black uppercase text-zinc-600">Formato</span>
+                    <span className="text-xl font-black text-white italic">{wod.type}</span>
                  </div>
                  <div className="w-full flex items-center justify-center h-12 rounded-xl bg-white/5 text-white border border-white/10 text-[10px] font-black uppercase tracking-widest">
-                   {MOCK_WOD.type}
+                   {wod.duration || "Time Cap: N/A"}
                  </div>
               </div>
            </ActionCard>
         </div>
 
-        {/* Leaderboards */}
         <div className="col-span-12 lg:col-span-9 flex flex-col gap-8 lg:gap-12 min-h-0">
-          {/* Podium Area */}
           <div className="grid grid-cols-3 gap-6 shrink-0">
              {rxResults.slice(0, 3).map((res, i) => (
                 <PodiumCard key={res.id} result={res} position={i + 1} />
              ))}
           </div>
 
-          {/* Scrolling Lists */}
           <div className="grid grid-cols-2 gap-8 lg:gap-12 flex-1 min-h-0">
              <RankingList results={rxResults} title="RX Ranking" type="RX" />
              <RankingList results={scaledResults} title="Scaled Ranking" type="Scaled" />
@@ -299,10 +247,15 @@ function TvModeLayout({ results }: { results: any[] }) {
 // --- MAIN PAGE ---
 
 export default function PizarraPage() {
+  const { client, ready, gymId } = useSupabase()
   const router = useRouter()
   const searchParams = useSearchParams()
   const isTvMode = searchParams.get("tv") === "true"
   const [filter, setFilter] = React.useState<"all" | "male" | "female">("all")
+  
+  const [currentWod, setCurrentWod] = React.useState<any>(null)
+  const [results, setResults] = React.useState<any[]>([])
+  const [loading, setLoading] = React.useState(true)
 
   const toggleTvMode = () => {
     const params = new URLSearchParams(searchParams)
@@ -311,15 +264,110 @@ export default function PizarraPage() {
     router.push(`?${params.toString()}`)
   }
 
+  const fetchData = React.useCallback(async () => {
+    if (!client || !gymId) return
+
+    try {
+      setLoading(true)
+      
+      const { data: wodData, error: wodError } = await client
+        .from('wods')
+        .select('*')
+        .eq('gym_id', gymId)
+        .eq('is_published', true)
+        .order('date', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (wodError) throw wodError
+
+      if (wodData) {
+        const mappedWod = {
+          id: wodData.id,
+          title: wodData.title,
+          type: wodData.type || wodData.category || "Workout",
+          parts: wodData.parts && Array.isArray(wodData.parts) && wodData.parts.length > 0 ? wodData.parts : [
+            { title: "Misión del Día", content: wodData.description || "Sin descripción" }
+          ],
+          focus: ["General"],
+          date: new Date(wodData.date || new Date()).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }),
+          duration: wodData.duration
+        }
+        setCurrentWod(mappedWod)
+
+        const { data: resultsData, error: resultsError } = await client
+          .from('wod_results')
+          .select(`
+            id,
+            result_value,
+            result_type,
+            gender,
+            note,
+            athlete:athletes(
+              profile:profiles(
+                full_name,
+                avatar_url
+              )
+            )
+          `)
+          .eq('wod_id', wodData.id)
+          .eq('gym_id', gymId)
+          .order('created_at', { ascending: true })
+
+        if (resultsError) throw resultsError
+
+        const mappedResults = (resultsData || []).map(r => ({
+          id: r.id,
+          athlete: (r.athlete as any)?.profile?.full_name || "Atleta Anónimo",
+          result: r.result_value,
+          type: r.result_type || "RX",
+          class: "Sesión",
+          gender: r.gender || "all",
+          avatar: (r.athlete as any)?.profile?.avatar_url || `https://i.pravatar.cc/150?u=${r.id}`,
+          note: r.note || ""
+        }))
+
+        setResults(mappedResults)
+      }
+    } catch (err) {
+      console.error("[PizarraPage] Error fetching data:", err)
+    } finally {
+      setLoading(false)
+    }
+  }, [client, gymId])
+
+  React.useEffect(() => {
+    if (ready) {
+      fetchData()
+    }
+  }, [ready, fetchData])
+
+  if (loading && !currentWod) {
+    return (
+      <div className="flex items-center justify-center p-20 animate-pulse">
+        <Activity className="size-10 text-indigo-500 mr-3" />
+        <span className="text-sm font-black uppercase tracking-widest text-zinc-500">Sincronizando Leaderboard...</span>
+      </div>
+    )
+  }
+
+  const displayWod = currentWod || {
+    title: "Sin Programación",
+    type: "Descanso",
+    parts: [{ title: "Nota", content: "No hay un entrenamiento programado para hoy." }],
+    date: new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })
+  }
+
+  const filteredResults = results.filter(r => filter === 'all' || r.gender === filter)
+
   if (isTvMode) {
     return (
       <div className="fixed inset-0 z-100 bg-[#0a0a0c] overflow-hidden scrollbar-none antialiased">
-        <TvModeLayout results={LEADERBOARD_RESULTS} />
-        {/* Escape Button */}
+        <TvModeLayout results={results} wod={displayWod} />
         <Button 
           variant="ghost" 
           onClick={toggleTvMode}
-          className="absolute bottom-4 right-4 text-zinc-800 hover:text-zinc-600 transition-colors z-50"
+          className="absolute bottom-4 right-4 text-zinc-800 hover:text-zinc-600 transition-colors z-50 px-2"
         >
           Salida (Esc)
         </Button>
@@ -329,7 +377,6 @@ export default function PizarraPage() {
 
   return (
     <div className="flex flex-col gap-8 max-w-[1500px] mx-auto pb-6 pt-4 px-1 h-[calc(100vh-140px)] min-h-[750px]">
-      {/* Header Section - More compact */}
       <section className="flex flex-col md:flex-row md:items-end justify-between gap-4 shrink-0">
         <div className="space-y-0.5">
           <div className="flex items-center gap-3 mb-0.5">
@@ -349,16 +396,11 @@ export default function PizarraPage() {
              <Monitor className="size-3.5 mr-2" />
              Modo Pantalla Completa
           </Button>
-          <Button className="h-10 rounded-xl bg-[#5e5ce6] text-white font-black uppercase tracking-wider text-[9px] px-6 shadow-lg shadow-indigo-500/10 active:scale-95 transition-all font-sans">
-             Nueva Entrada
-          </Button>
+          <AddWodModal onSuccess={fetchData} />
         </div>
       </section>
 
-      {/* Main Grid Layout: 70/30 changed to 60/40 for more width */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 flex-1 min-h-0">
-        
-        {/* Left Column (60%) - WOD */}
         <div className="xl:col-span-7 flex flex-col min-h-0">
            <div className="flex items-center justify-between px-1 mb-4 shrink-0">
               <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Programación de Hoy</h2>
@@ -373,16 +415,16 @@ export default function PizarraPage() {
                  <div className="flex-1 space-y-1">
                     <div className="flex items-center justify-between">
                        <h2 className="text-2xl font-black text-white italic tracking-tighter uppercase whitespace-pre-wrap leading-none">
-                          {MOCK_WOD.title}
+                          {displayWod.title}
                        </h2>
-                       <span className="text-zinc-600 text-[9px] font-black uppercase tracking-widest hidden sm:block">{MOCK_WOD.date}</span>
+                       <span className="text-zinc-600 text-[9px] font-black uppercase tracking-widest hidden sm:block">{displayWod.date}</span>
                     </div>
                     <ActionCardTags>
                        <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20 text-[8px] font-black uppercase tracking-widest text-indigo-400">
                           Entrenamiento
                        </span>
                        <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[8px] font-black tracking-widest text-zinc-400 italic">
-                          {MOCK_WOD.type}
+                          {displayWod.type}
                        </span>
                     </ActionCardTags>
                  </div>
@@ -391,9 +433,8 @@ export default function PizarraPage() {
   
             <ActionCardContent className="flex-1 overflow-y-auto scrollbar-none pb-4">
                <div className="space-y-6">
-                  {/* Parts Grid */}
                   <div className="grid grid-cols-1 gap-4">
-                     {MOCK_WOD.parts.map(part => (
+                     {displayWod.parts.map((part: any) => (
                         <div key={part.title} className="bg-[#131315]/80 p-5 rounded-[22px] border border-white/5 space-y-3 relative overflow-hidden group/part transition-all hover:bg-white/2">
                            <div className="flex items-center gap-2 text-indigo-500/50">
                               <Zap className="size-3.5" />
@@ -406,10 +447,9 @@ export default function PizarraPage() {
                      ))}
                   </div>
   
-                  {/* Metrics Grid */}
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                      {[
-                        { label: "Time Cap", value: "15m", icon: Timer, color: "text-amber-500" },
+                        { label: "Time Cap", value: displayWod.duration || "N/A", icon: Timer, color: "text-amber-500" },
                         { label: "Intensidad", value: "HARD", icon: Activity, color: "text-red-500" },
                         { label: "Material", value: "Barra, Pull-up", icon: Activity, color: "text-zinc-500" },
                         { label: "Foco", value: "Hombros", icon: Activity, color: "text-indigo-400" }
@@ -427,8 +467,8 @@ export default function PizarraPage() {
             </ActionCardContent>
   
             <ActionCardFooter 
-              onEdit={() => console.log('Edit WOD')}
-              onDelete={() => console.log('Delete WOD')}
+              onEdit={() => fetchData()}
+              onDelete={() => console.log('Delete')}
               className="bg-white/1 sm:flex-row sm:items-center sm:justify-between gap-4 shrink-0"
             >
                <Button className="h-10 w-full sm:w-auto rounded-xl bg-white text-black font-black uppercase tracking-wider text-[9px] px-8 shadow-2xl hover:bg-zinc-100 transition-all font-sans active:scale-95">
@@ -439,13 +479,12 @@ export default function PizarraPage() {
           </ActionCard>
         </div>
 
-        {/* Right Column (40%) - Leaderboard with Auto-scroll */}
         <div className="xl:col-span-5 flex flex-col min-h-0">
            <div className="flex items-center justify-between px-1 mb-4 shrink-0">
               <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Live Leaderboard</h2>
               <div className="bg-zinc-950 border border-white/5 rounded-full p-0.5 flex">
                  {["all", "male", "female"].map((f) => (
-                   <button 
+                    <button 
                     key={f}
                     onClick={() => setFilter(f as any)}
                     className={cn(
@@ -465,13 +504,13 @@ export default function PizarraPage() {
                     <div className="size-8 rounded-lg bg-amber-500 flex items-center justify-center text-white">
                        <Trophy className="size-4" />
                     </div>
-                    <span className="text-xs font-black uppercase italic tracking-tighter text-white">Resultados RX</span>
+                    <span className="text-xs font-black uppercase italic tracking-tighter text-white">Ranking Global</span>
                  </div>
               </div>
               
               <div className="flex-1 min-h-0">
                  <RankingList 
-                   results={LEADERBOARD_RESULTS.filter(r => r.type === "RX" && (filter === 'all' || r.gender === filter))} 
+                   results={filteredResults} 
                    title="" 
                    type="RX" 
                  />

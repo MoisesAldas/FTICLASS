@@ -1,219 +1,193 @@
 "use client"
 
 import * as React from "react"
-import { CalendarDays, Filter, Plus, Users, Clock, LayoutGrid, CheckCircle2, Award, Flame } from "lucide-react"
-import { ActionButton } from "@/components/shared/action-button"
-import { AddClassModal } from "@/components/clases/add-class-modal"
-import { DatePicker } from "@/components/shared/date-picker"
-import { SelectPrimitive } from "@/components/shared/select-primitive"
-import { ActionCard, ActionCardHeader, ActionCardContent, ActionCardFooter, ActionCardAvatar, ActionCardTags, ActionCardProgress } from "@/components/shared/action-card"
-import { format, isSameDay } from "date-fns"
-import { es } from "date-fns/locale"
-import { AttendanceModal } from "@/components/clases/attendance-modal"
+import { 
+  CalendarDays, 
+  Sparkles, 
+  LayoutGrid, 
+  Award, 
+  Plus, 
+  Loader2,
+  Users
+} from "lucide-react"
+import { useRouter } from "next/navigation"
+import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
-import { Input } from "@workspace/ui/components/input"
-import { Switch } from "@workspace/ui/components/switch"
-import { cn } from "@workspace/ui/lib/utils"
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from "date-fns"
 
-const MOCK_CLASES = [
-  { id: 1, servicio: "CrossFit", fecha: "2026-03-29", horario: "14:00 - 18:00", inscritos: 0, capacidad: 30, coach: "Martín Gómez", wod: "Murph" },
-  { id: 2, servicio: "HIIT", fecha: "2026-03-29", horario: "10:00 - 11:00", inscritos: 12, capacidad: 20, coach: "Sofía López", wod: "Fran (Benchmark)" },
-  { id: 3, servicio: "CrossFit", fecha: "2026-03-29", horario: "19:00 - 20:00", inscritos: 28, capacidad: 30, coach: "Martín Gómez", wod: "Fuerza Absoluta" },
-]
+import { cn } from "@workspace/ui/lib/utils"
+import { useSupabase } from "@/hooks/use-supabase"
+import { SelectPrimitive } from "@/components/shared/select-primitive"
+import { MonthlyCalendar } from "@/components/clases/monthly-calendar"
+import { AgendaView } from "@/components/clases/agenda-view"
+import { ViewToggle } from "@/components/clases/view-toggle"
+import { AttendanceSheet } from "@/components/clases/attendance-sheet"
+import { AddClassModal } from "@/components/clases/add-class-modal"
 
 export default function ClasesPage() {
-  const [allowBooking, setAllowBooking] = React.useState(true)
-  const TODAY = new Date("2026-03-30") // Mocking today as March 30
-  const [startDate, setStartDate] = React.useState<Date>(TODAY)
-  const [endDate, setEndDate] = React.useState<Date>(TODAY)
-  const [selectedClass, setSelectedClass] = React.useState<any>(null)
+  const router = useRouter()
+  const { client, gymId } = useSupabase()
+  
+  // 1. Estados de Navegación y Vistas
+  const [currentView, setCurrentView] = React.useState<'calendar' | 'agenda'>('calendar')
+  const [currentMonth, setCurrentMonth] = React.useState(new Date())
+  
+  // 2. Estados de Datos
+  const [sessions, setSessions] = React.useState<any[]>([])
+  const [wods, setWods] = React.useState<any[]>([])
+  const [coaches, setCoaches] = React.useState<any[]>([])
+  const [disciplines, setDisciplines] = React.useState<any[]>([])
+  const [loading, setLoading] = React.useState(true)
+  
+  // 3. Estados de Filtros
+  const [filterCoach, setFilterCoach] = React.useState("all")
+  const [filterDiscipline, setFilterDiscipline] = React.useState("all")
+  
+  // 4. Estado de Asistencia (Sheet)
+  const [selectedSession, setSelectedSession] = React.useState<any>(null)
   const [isAttendanceOpen, setIsAttendanceOpen] = React.useState(false)
 
-  const isTodayView = React.useMemo(() => isSameDay(startDate, TODAY) && isSameDay(endDate, TODAY), [startDate, endDate, TODAY])
+  // FETCH DATA CENTRALIZADO
+  const fetchData = React.useCallback(async () => {
+    if (!client || !gymId) return
+    setLoading(true)
+    
+    try {
+      const monthStart = startOfMonth(currentMonth)
+      const monthEnd = endOfMonth(monthStart)
+      const fetchStart = startOfWeek(monthStart, { weekStartsOn: 1 })
+      const fetchEnd = endOfWeek(monthEnd, { weekStartsOn: 1 })
 
-  const handleOpenAttendance = (clase: any) => {
-    setSelectedClass({
-      id: clase.id.toString(),
-      name: clase.servicio,
-      hour: clase.horario.split(" - ")[0],
-      coach: clase.coach,
-      capacity: clase.capacidad
-    })
+      const [sessRes, wodsRes, coachRes, discRes] = await Promise.all([
+        client.from('class_sessions').select(`*, class_type:class_types(id, name, color), coach:coaches(id, profiles(full_name))`)
+          .eq('gym_id', gymId)
+          .gte('date', format(fetchStart, 'yyyy-MM-dd'))
+          .lte('date', format(fetchEnd, 'yyyy-MM-dd')),
+        client.from('wods').select('*')
+          .eq('gym_id', gymId)
+          .gte('date', format(fetchStart, 'yyyy-MM-dd'))
+          .lte('date', format(fetchEnd, 'yyyy-MM-dd')),
+        client.from('coaches').select('id, profiles(full_name)').eq('gym_id', gymId),
+        client.from('class_types').select('id, name').eq('gym_id', gymId)
+      ])
+
+      if (sessRes.data) setSessions(sessRes.data)
+      if (wodsRes.data) setWods(wodsRes.data)
+      if (coachRes.data) setCoaches(coachRes.data)
+      if (discRes.data) setDisciplines(discRes.data)
+      
+      // Sincronizar con el servidor para invalidar cachés de Next.js
+      router.refresh()
+    } catch (err) {
+      console.error("Error fetching classes data:", err)
+    } finally {
+      setLoading(false)
+    }
+  }, [client, gymId, currentMonth])
+
+  React.useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  // Lógica de Filtrado Local (Pura y Rápida)
+  const filteredSessions = sessions.filter(s => {
+    const coachMatch = filterCoach === "all" || s.coach_id === filterCoach
+    const discMatch = filterDiscipline === "all" || s.class_type_id === filterDiscipline
+    return coachMatch && discMatch
+  })
+
+  const handleSessionSelect = (sess: any) => {
+    setSelectedSession(sess)
     setIsAttendanceOpen(true)
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-5">
+      
+      {/* HEADER: TITLE & NEW BUTTON */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="space-y-1">
-          <h1 className="text-4xl font-bold text-white tracking-tight">Clases y Reservas</h1>
+          <h1 className="text-4xl font-bold text-white tracking-tight">Clases</h1>
           <p className="text-zinc-500 text-sm font-medium max-w-xl">
-            Configure la disponibilidad de sesiones y monitoree la asistencia en tiempo real.
+            Gestión de sesiones, programación de WODs y control de asistencia centralizada.
           </p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          <AddClassModal />
+          <AddClassModal onSuccess={fetchData} />
         </div>
       </div>
 
-      {/* 1. Configuration Section */}
+      {/* FILTROS Y CONTENIDO */}
       <section className="space-y-4">
-        <div className="flex items-center justify-between">
-           <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 px-1">Configuración y Disponibilidad</h2>
-        </div>
-        
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-          <div className="xl:col-span-2 rounded-[32px] bg-zinc-950 border border-white/5 p-6 flex flex-col md:flex-row items-center gap-6 shadow-xl">
-             <div className="flex items-center gap-4 flex-1 w-full">
-                <div className="flex flex-col gap-1.5 flex-1">
-                   <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500 px-1">Servicio</label>
-                   <SelectPrimitive 
-                      options={[
-                        { label: "CrossFit", value: "crossfit" },
-                        { label: "HIIT", value: "hiit" }
-                      ]}
-                      value="crossfit"
-                      onValueChange={() => {}}
-                      icon={LayoutGrid}
-                   />
-                </div>
-                <div className="flex flex-col gap-1.5 flex-1">
-                   <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500 px-1">Desde</label>
-                   <DatePicker date={startDate} onChange={(date) => date && setStartDate(date)} />
-                </div>
-                <div className="flex flex-col gap-1.5 flex-1">
-                   <label className="text-[10px] font-black uppercase tracking-wider text-zinc-500 px-1">Hasta</label>
-                   <DatePicker date={endDate} onChange={(date) => date && setEndDate(date)} />
-                </div>
-             </div>
-             <Button variant="ghost" className="rounded-full h-11 px-8 font-black text-xs uppercase tracking-widest border border-white/10 text-zinc-300 hover:bg-white/5 transition-all">
-                Consultar
-             </Button>
-          </div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 px-1">Filtros de Sesión</h2>
+            
+            <div className="inline-flex flex-wrap items-center p-1.5 bg-[#131315] border border-white/5 rounded-2xl gap-2 shadow-inner">
+               <ViewToggle view={currentView} onViewChange={setCurrentView} />
+               
+               <div className="h-6 w-px bg-white/5 mx-1 hidden sm:block" />
 
-          <div className="rounded-[32px] bg-indigo-500/5 border border-indigo-500/10 p-6 flex items-center justify-between shadow-xl">
-             <div className="space-y-1">
-                <p className="text-white font-bold text-sm">Habilitar Reservas</p>
-                <p className="text-indigo-400/70 text-[11px] font-medium leading-none">Abre el acceso al box para clientes</p>
-             </div>
-             <Switch checked={allowBooking} onCheckedChange={setAllowBooking} />
-          </div>
+               <div className="flex items-center gap-2">
+                  <SelectPrimitive 
+                    options={[
+                      { label: "Coaches: Todos", value: "all" }, 
+                      ...coaches.map(c => {
+                        const p = Array.isArray(c.profiles) ? c.profiles[0] : c.profiles;
+                        return { label: p?.full_name || 'Coach', value: c.id };
+                      })
+                    ]}
+                    value={filterCoach}
+                    onValueChange={setFilterCoach}
+                    icon={Award}
+                    className="w-full sm:w-40 bg-zinc-900/40 border-white/5 h-9 text-[10px]"
+                  />
+                  <SelectPrimitive 
+                    options={[{ label: "Disciplinas: Todas", value: "all" }, ...disciplines.map(d => ({ label: d.name, value: d.id }))]}
+                    value={filterDiscipline}
+                    onValueChange={setFilterDiscipline}
+                    icon={LayoutGrid}
+                    className="w-full sm:w-40 bg-zinc-900/40 border-white/5 h-9 text-[10px]"
+                  />
+               </div>
+            </div>
         </div>
-      </section>
 
-      {/* 2. Listado Section */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-           <div className="flex flex-col gap-1">
-              <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 px-1">Sesiones Consultadas</h2>
-              {isTodayView && (
-                 <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[9px] font-black uppercase tracking-widest w-fit border border-emerald-500/20">
-                    <div className="size-1 rounded-full bg-emerald-500 animate-pulse" /> Panel de hoy
-                 </span>
-              )}
-           </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {MOCK_CLASES.map((clase) => (
-             <ActionCard 
-               key={clase.id}
-               decoratorIcon={<CheckCircle2 className="size-20 opacity-50" />}
-             >
-                <ActionCardHeader className="pb-4">
-                  <div className="flex items-start gap-4">
-                     <ActionCardAvatar>
-                        <CalendarDays className="size-5 text-zinc-400" />
-                     </ActionCardAvatar>
-                     <div className="space-y-1.5 flex-1">
-                        <div className="flex items-center justify-between">
-                           <h3 className="text-2xl font-black text-white tracking-tighter">{clase.horario}</h3>
-                           <span className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">{clase.fecha}</span>
-                        </div>
-                        <ActionCardTags>
-                           <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black uppercase tracking-widest text-indigo-400 inline-flex items-center gap-1.5">
-                             {clase.servicio}
-                           </span>
-                        </ActionCardTags>
-                     </div>
-                  </div>
-                </ActionCardHeader>
-                
-                <ActionCardContent className="pt-0">
-                  <div className="space-y-5">
-                     {/* Assigned Relational Data - Structured like job offer chips */}
-                     <div className="grid grid-cols-2 gap-2">
-                        <div className="bg-[#131315]/80 p-3 rounded-2xl border border-white/5 space-y-1">
-                           <div className="flex items-center gap-1.5 text-zinc-500">
-                              <Award className="size-3" />
-                              <span className="text-[9px] uppercase font-black tracking-widest">Coach</span>
-                           </div>
-                           <p className="text-[13px] font-bold text-white truncate">{clase.coach}</p>
-                        </div>
-                        <div className="bg-[#131315]/80 p-3 rounded-2xl border border-white/5 space-y-1">
-                           <div className="flex items-center gap-1.5 text-zinc-500">
-                              <Flame className="size-3" />
-                              <span className="text-[9px] uppercase font-black tracking-widest">WOD</span>
-                           </div>
-                           <p className="text-[13px] font-bold text-white truncate">{clase.wod}</p>
-                        </div>
-                     </div>
+        <div className={cn(
+          "flex-1 relative transition-all duration-700 min-h-[500px]",
+          loading ? "opacity-40 pointer-events-none grayscale" : "opacity-100"
+        )}>
+         {loading && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center z-50 gap-4">
+               <Loader2 className="size-12 text-indigo-500 animate-spin" />
+               <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Actualizando Universo de Clases...</span>
+            </div>
+         )}
 
-                     {/* Progress Metric */}
-                     <div className="pt-2 border-t border-white/5">
-                        <ActionCardProgress 
-                           value={clase.inscritos} 
-                           max={clase.capacidad} 
-                           label="Ocupación" 
-                        />
-                     </div>
-                  </div>
-                </ActionCardContent>
+         {currentView === 'calendar' ? (
+           <MonthlyCalendar 
+              currentDate={currentMonth}
+              onMonthChange={setCurrentMonth}
+              sessions={filteredSessions}
+              wods={wods}
+              onSessionSelect={handleSessionSelect}
+           />
+         ) : (
+           <AgendaView 
+              sessions={filteredSessions}
+              wods={wods}
+              onSessionSelect={handleSessionSelect}
+           />
+         )}
+      </div>
 
-                <ActionCardFooter 
-                  onEdit={() => console.log('Edit class', clase.id)}
-                  onDelete={() => console.log('Delete class', clase.id)}
-                  className="pt-0"
-                >
-                   <ActionButton 
-                     label="Gestionar Asistencia" 
-                     icon={<Users className="size-4 mr-2" />}
-                     className="w-full h-11 rounded-2xl bg-white/5 border-white/5 hover:bg-white/10 text-white font-black uppercase tracking-wider text-[10px]"
-                     onClick={() => handleOpenAttendance(clase)}
-                   />
-                </ActionCardFooter>
-             </ActionCard>
-           ))}
-        </div>
-      </section>
-
-      {/* 3. Stats Section */}
-      <section className="space-y-4 pt-4 border-t border-white/5">
-        <div className="flex items-center justify-between">
-           <h2 className="text-[10px] font-black uppercase tracking-[0.03em] text-zinc-500 px-1">Ocupación Promedio</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-           {/* Mini metrics cards */}
-           {[
-             { label: "Check-ins AM", value: "84" },
-             { label: "Check-ins PM", value: "156" },
-             { label: "Canceleaciones", value: "12" },
-             { label: "Waitlist", value: "8" }
-           ].map((stat, i) => (
-             <div key={i} className="p-4 rounded-2xl bg-zinc-900/40 border border-white/5 flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase tracking-wider text-zinc-500">{stat.label}</span>
-                <span className="text-xl font-bold text-white tracking-tighter">{stat.value}</span>
-             </div>
-           ))}
-        </div>
-      </section>
-
-      <AttendanceModal 
-        isOpen={isAttendanceOpen} 
-        onOpenChange={setIsAttendanceOpen} 
-        classData={selectedClass || { id: "", name: "", hour: "", coach: "", capacity: 0 }}
+      {/* PANEL DE ASISTENCIA GLOBAL */}
+      <AttendanceSheet 
+        isOpen={isAttendanceOpen}
+        onClose={() => setIsAttendanceOpen(false)}
+        clase={selectedSession}
       />
+
+      </section>
     </div>
   )
 }
-

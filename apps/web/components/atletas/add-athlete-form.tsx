@@ -8,6 +8,7 @@ import * as z from "zod"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { ActionButton } from "../shared/action-button"
+import { createAthleteAction } from "@/app/(dashboard)/dashboard/atletas/nuevo/actions"
 import { 
   CalendarIcon, 
   Loader2, 
@@ -40,7 +41,7 @@ import {
 const athleteSchema = z.object({
   firstName: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
   lastName: z.string().min(2, "El apellido debe tener al menos 2 caracteres"),
-  dni: z.string().min(5, "Ingrese una cédula o pasaporte válido"),
+  dni: z.string().regex(/^\d{10}$/, "La cédula debe tener exactamente 10 dígitos numéricos"),
   email: z.string().email("Correo electrónico no válido"),
   phone: z.string().min(7, "Ingrese un número de teléfono válido"),
   birthDate: z.date({
@@ -84,14 +85,42 @@ export function AddAthleteForm({ onSuccess, onCancel }: AddAthleteFormProps) {
 
   async function onSubmit(data: AthleteFormValues) {
     setIsSubmitting(true)
-    // Simulación de guardado
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    console.log("Athlete data:", data)
-    setIsSubmitting(false)
-    toast.success("Atleta vinculado correctamente", {
-      description: `${data.firstName} ${data.lastName} ha sido añadido a tu base de datos.`,
-    })
-    onSuccess?.()
+    const toastId = toast.loading("Registrando atleta...")
+    
+    try {
+      // 1. Serialización de fecha
+      const serializedData = {
+        ...data,
+        birthDate: data.birthDate instanceof Date 
+          ? data.birthDate.toISOString().split('T')[0] 
+          : data.birthDate
+      }
+
+      console.log("[MODAL] 📡 Enviando:", serializedData)
+      const result = await createAthleteAction(serializedData)
+      console.log("[MODAL] 🏁 Resultado:", result)
+
+      if (result.error) {
+        toast.error("Error al registrar", { 
+          id: toastId,
+          description: typeof result.error === 'string' ? result.error : "Revisa los datos"
+        })
+        return
+      }
+
+      if (result.success) {
+        toast.success("¡Atleta registrado!", { 
+          id: toastId,
+          description: `Se han creado las credenciales para ${data.firstName}.`
+        })
+        onSuccess?.()
+      }
+    } catch (err: any) {
+      console.error("[MODAL] ❌ Error fatal:", err)
+      toast.error("Error de conexión", { id: toastId })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (

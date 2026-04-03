@@ -7,8 +7,17 @@ import { ModalPrimitive } from "../shared/modal-primitive"
 import { ActionButton } from "../shared/action-button"
 import { AddStaffForm } from "./add-staff-form"
 
-export function AddStaffModal() {
+interface AddStaffModalProps {
+  onSuccess?: () => void
+}
+
+export function AddStaffModal({ onSuccess }: AddStaffModalProps) {
   const [open, setOpen] = React.useState(false)
+
+  const handleSuccess = () => {
+    setOpen(false)
+    onSuccess?.()
+  }
 
   return (
     <ModalPrimitive
@@ -26,7 +35,7 @@ export function AddStaffModal() {
       maxWidth="sm:max-w-3xl"
     >
       <AddStaffForm 
-        onSuccess={() => setOpen(false)} 
+        onSuccess={handleSuccess} 
         onCancel={() => setOpen(false)}
       />
     </ModalPrimitive>

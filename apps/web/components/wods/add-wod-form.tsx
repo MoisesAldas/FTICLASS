@@ -37,7 +37,10 @@ interface AddWodFormProps {
   onCancel?: () => void
 }
 
+import { useSupabase } from "@/hooks/use-supabase"
+
 export function AddWodForm({ onSuccess, onCancel }: AddWodFormProps) {
+  const { client, gymId } = useSupabase()
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [showCustomCategoria, setShowCustomCategoria] = React.useState(false)
 
@@ -60,13 +63,42 @@ export function AddWodForm({ onSuccess, onCancel }: AddWodFormProps) {
   const duracionValue = watch("duracionEstimada")
 
   async function onSubmit(data: WodFormValues) {
-    setIsSubmitting(true)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setIsSubmitting(false)
-    toast.success("Rutina añadida a la librería", {
-      description: `El WOD "${data.titulo}" ha sido guardado exitosamente.`,
-    })
-    onSuccess?.()
+    if (!client || !gymId) {
+      toast.error("Error de autenticación", {
+        description: "No se pudo identificar el gimnasio activo.",
+      })
+      return
+    }
+
+    try {
+      setIsSubmitting(true)
+      
+      const { error } = await client
+        .from('wods')
+        .insert({
+          gym_id: gymId,
+          title: data.titulo,
+          category: data.categoria,
+          description: data.descripcion,
+          duration: data.duracionEstimada,
+          is_published: true,
+          date: new Date().toISOString()
+        })
+
+      if (error) throw error
+
+      toast.success("Rutina añadida a la librería", {
+        description: `El WOD "${data.titulo}" ha sido guardado exitosamente.`,
+      })
+      onSuccess?.()
+    } catch (err) {
+      console.error("[AddWodForm] Error saving WOD:", err)
+      toast.error("Error al guardar", {
+        description: "Hubo un problema al conectar con el servidor.",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const CATEGORIA_OPTIONS = [
